@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model orders {
+  id            String    @id @default(uuid())
+  order_number  String    @unique
+  order_date    DateTime
+  customer_name String
+  product_name  String
+  quantity      Int       @default(1)
+  status        String    @default("pending")
+  notes         String?
+  user_id       String
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now())
+
+  fabrics       fabrics[]
+  zippers       zippers[]
+
+  @@map("orders")
+}
+
+model fabrics {
+  id              String   @id @default(uuid())
+  name            String
+  color           String?
+  composition     String?
+  width_cm        Decimal?
+  price_per_meter Decimal?
+  supplier        String?
+  stock_meters    Decimal  @default(0)
+  user_id         String
+  created_at      DateTime @default(now())
+
+  order_id        String
+  order           orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("fabrics")
+}
+
+model zippers {
+  id             String   @id @default(uuid())
+  type           String
+  length_cm      Int?
+  color          String?
+  price_per_unit Decimal?
+  supplier       String?
+  stock_quantity Int      @default(0)
+  user_id        String
+  created_at     DateTime @default(now())
+
+  order_id       String
+  order          orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("zippers")
+}
