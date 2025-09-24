@@ -220,13 +220,13 @@ export function OrdersList({ orders }: OrdersListProps) {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1 ml-4">
-                                        <Link href={`/orders/${order.id}`}>
-                                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent">
+                                        <Link href={`/orders/details/${order.id}`}>
+                                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent cursor-pointer">
                                                 <Eye className="h-3 w-3" />
                                             </Button>
                                         </Link>
-                                        <Link href={`/orders/${order.id}/edit`}>
-                                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent">
+                                        <Link href={`/orders/edit/${order.id}`}>
+                                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent cursor-pointer">
                                                 <Edit className="h-3 w-3" />
                                             </Button>
                                         </Link>
@@ -234,7 +234,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="text-red-700 hover:text-red-800 bg-transparent h-8 w-8 p-0"
+                                                className="text-red-700 hover:text-red-800 bg-transparent h-8 w-8 p-0 cursor-pointer"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </Button>

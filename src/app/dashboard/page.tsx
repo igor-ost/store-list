@@ -25,7 +25,7 @@ export default async function DashboardPage() {
                 className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <div className="font-medium">Новый заказ</div>
-                <div className="text-sm text-slate-600">Создать новый заказ на производство</div>
+                <div className="text-sm text-slate-600">Создать новый заказ</div>
               </a>
               <a
                 href="/materials"
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
               </a>
               <a href="/workers" className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                 <div className="font-medium">Работники</div>
-                <div className="text-sm text-slate-600">Управление персоналом и зарплатами</div>
+                <div className="text-sm text-slate-600">Управление персоналом</div>
               </a>
             </div>
           </div>

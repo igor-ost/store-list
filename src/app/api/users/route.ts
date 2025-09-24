@@ -18,6 +18,25 @@ import bcrypt from "bcrypt";
 //   return NextResponse.json({status: "ok"});
 // }
 
+export async function GET() {
+
+  try {
+    const workers = await prisma.user.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(workers, { status: 200 });
+  } catch (error: any) {
+    console.error("Error fetching workers:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch workers", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -28,7 +47,8 @@ export async function POST(request: Request) {
     data: {
       email: body.email,
       name: body.name,
-      password: hashedPassword
+      password: hashedPassword,
+      role: body.role
     },
   });
 

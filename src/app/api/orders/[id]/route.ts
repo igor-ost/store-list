@@ -31,3 +31,35 @@ export async function DELETE(
     )
   }
 }
+
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const order = await prisma.orders.findUnique({
+      where: {
+        id: (params.id)
+      },
+      include: {
+        fabrics: true,
+        zippers: true,
+      },
+    })
+
+    if (!order) {
+      return NextResponse.json(
+        { error: `Order with id ${params.id} not found` },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(order, { status: 200 })
+  } catch (error: any) {
+    console.error("Error fetching order:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch order", details: error.message },
+      { status: 500 }
+    )
+  }
+}

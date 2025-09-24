@@ -99,10 +99,10 @@ export function OrderForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="basic">Основная информация</TabsTrigger>
-          <TabsTrigger value="materials">Материалы</TabsTrigger>
-          <TabsTrigger value="workers">Работники</TabsTrigger>
-          <TabsTrigger value="additional">Дополнительно</TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="basic">Основная информация</TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="materials">Материалы</TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="workers">Работники</TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="additional">Дополнительно</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">

@@ -1,25 +1,27 @@
 
 'use client'
-import { OrdersList } from "@/components/shared/order-list"
+
+import { WorkersGeneral } from "@/@types/workers-types"
+import { Header } from "@/components/shared/header"
+import { WorkersList } from "@/components/shared/workers-list"
 import { Button } from "@/components/ui/button"
+import { Api } from "@/service/api-clients"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { Header } from "@/components/shared/header"
 import { useEffect, useState } from "react"
-import { OrderGeneral } from "@/@types/orders-types"
 import { toast } from "sonner"
-import { Api } from "@/service/api-clients"
 
-export default function OrdersPage() {
 
-  const [orders,setOrders] = useState<OrderGeneral[]>()
+export default function WorkersPage() {
+
+  const [workers,setWorkers] = useState<WorkersGeneral[]>()
 
   useEffect(()=>{
     const handleGetOrders = async () => {
       try {
-        const response = await Api.orders.getList();
+        const response = await Api.workers.getList();
         if(response){
-          setOrders(response)
+          setWorkers(response)
         }
       } catch (error) {
         console.log(error)
@@ -31,24 +33,25 @@ export default function OrdersPage() {
     handleGetOrders()
   },[])
 
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header active={"orders"} />
+      <Header active={"workers"} />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Заказы</h1>
-            <p className="text-slate-600">Управление заказами на производство</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">Персонал</h1>
+            <p className="text-slate-600">Управление персоналом</p>
           </div>
-          <Link href="/orders/new">
+          <Link href="/workers/new">
             <Button className="flex items-center gap-2 cursor-pointer">
               <Plus className="h-4 w-4" />
-              Новый заказ
+              Добавить персонал
             </Button>
           </Link>
         </div>
-        {orders && (
-            <OrdersList orders={orders} />
+        {workers && (
+          <WorkersList workers={workers} />
         )}
       </main>
     </div>
