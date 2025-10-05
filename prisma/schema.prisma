@@ -22,7 +22,7 @@ model orders {
   id            String    @id @default(uuid())
   order_number  String    @unique
   order_date    DateTime
-  customer_name String
+  customer_id   String
   product_name  String
   quantity      Int       @default(1)
   status        String    @default("pending")
@@ -30,7 +30,8 @@ model orders {
   user_id       String
   created_at    DateTime  @default(now())
   updated_at    DateTime  @default(now())
-
+  image_urls    String[]
+  customer      customer  @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   fabrics       fabrics[]
   zippers       zippers[]
 
@@ -65,9 +66,20 @@ model zippers {
   stock_quantity Int      @default(0)
   user_id        String
   created_at     DateTime @default(now())
-
   order_id       String
   order          orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@map("zippers")
+}
+
+
+model customer {
+  id        String   @id @default(uuid())
+  name      String
+  bin       String?   
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    orders[]
+  @@map("customers")
 }
