@@ -2,6 +2,7 @@
 'use client'
 
 import { WorkersGeneral } from "@/@types/workers-types"
+import { WorkerListSkeleton } from "@/components/loading/worker-list"
 import { Header } from "@/components/shared/header"
 import { WorkersList } from "@/components/shared/workers-list"
 import { Button } from "@/components/ui/button"
@@ -15,8 +16,9 @@ import { toast } from "sonner"
 export default function WorkersPage() {
 
   const [workers,setWorkers] = useState<WorkersGeneral[]>()
-
+  const [isLoading,setIsLoading] = useState(true);
   useEffect(()=>{
+    setIsLoading(true)
     const handleGetOrders = async () => {
       try {
         const response = await Api.workers.getList();
@@ -27,7 +29,7 @@ export default function WorkersPage() {
         console.log(error)
         toast.error(`Не удалось загрузить заказы: ${error}`)
       }finally{
-        
+        setIsLoading(false)
       }
     }
     handleGetOrders()
@@ -50,9 +52,11 @@ export default function WorkersPage() {
             </Button>
           </Link>
         </div>
-        {workers && (
+        {!isLoading && workers ? 
           <WorkersList workers={workers} />
-        )}
+        :
+          <WorkerListSkeleton/>
+        }
       </main>
     </div>
   )

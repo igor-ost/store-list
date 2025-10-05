@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { BarChart3, ShoppingCart, FileText, UserCircle } from "lucide-react"
+import { BarChart3, ShoppingCart, FileText, UserCircle, LucideFileStack } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { UserInfo } from "./user-info"
 
-type NavigationItem = "statistics" | "orders" | "reports" | "workers"
+type NavigationItem = "statistics" | "orders" | "reports" | "workers" | "reference-books"
 
 export function Header({active ="orders"}:{active:NavigationItem}) {
   const [activeTab] = useState<NavigationItem>(active)
@@ -30,6 +30,12 @@ export function Header({active ="orders"}:{active:NavigationItem}) {
       label: "Персонал",
       href: "/workers",
       icon: UserCircle,
+    },
+    {
+      id: "reference-books" as NavigationItem,
+      label: "Справочник",
+      href: "/reference-books",
+      icon: LucideFileStack,
     },
     {
       id: "reports" as NavigationItem,

@@ -6,23 +6,21 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const { general, zippers = [], fabrics = [],user_id } = body;
-
     const order = await prisma.orders.create({
       data: {
         order_number: general.order_number,
         order_date: new Date(general.order_date),
-        customer_name: general.customer_name,
+        customer_id: general.customer_id,
         product_name: general.product_name,
         quantity: general.quantity,
         status: general.status,
         notes: general.notes,
         user_id: user_id,
-
+        image_urls: general.image_urls,
         fabrics: {
           create: fabrics.map((f: any) => ({
             name: f.name,
             color: f.color,
-            // consumption мапим в stock_meters
             stock_meters: Number(f.consumption) || 0,
             user_id: user_id,
           })),
@@ -64,6 +62,7 @@ export async function GET() {
       include: {
         fabrics: true,
         zippers: true,
+        customer:true
       },
     });
 

@@ -21,12 +21,18 @@ import bcrypt from "bcrypt";
 export async function GET() {
 
   try {
-    const workers = await prisma.user.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
+  const workers = await prisma.user.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
+})
     return NextResponse.json(workers, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching workers:", error);

@@ -10,6 +10,11 @@ const ApiRouter = {
 
     WORKERS_GET_LIST: "users/",
     WORKERS_REMOVE_BY_ID: "users/",
-    WORKERS_CREATE: "users/"
+    WORKERS_CREATE: "users/",
+
+    CUSTOMERS_GET_LIST: "customers/",
+    CUSTOMERS_CREATE: "customers/",
+    CUSTOMERS_REMOVE_BY_ID: "customers/",
+
 }
 export default ApiRouter;

@@ -1,4 +1,5 @@
 import { Header } from "@/components/shared/header"
+import { UserInfo } from "@/components/shared/user-info"
 
 export default async function DashboardPage() {
 
@@ -8,15 +9,16 @@ export default async function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800 mb-2">Панель управления производством</h1>
-          <p className="text-slate-600">Добро пожаловать, {``}</p>
+          <p className="text-slate-600 flex gap-2 items-center">Добро пожаловать,<UserInfo variant="text"/></p>
+
         </div>
 
         <div className="grid gap-6 mb-8">
-          {/* <DashboardStats /> */}
+
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* <RecentOrders /> */}
+
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4">Быстрые действия</h3>
             <div className="grid gap-3">

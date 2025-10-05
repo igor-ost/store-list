@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,12 +15,17 @@ import { Plus, Minus } from "lucide-react"
 import { Api } from "@/service/api-clients"
 import { authStore } from "@/store/auth-store"
 import { toast } from "sonner"
+import type { WorkersGeneral } from "@/@types/workers-types"
+import { Checkbox } from "../ui/checkbox"
+import RoleBadge from "./role-badge"
+import type { CustomerGeneral } from "@/@types/customer-types"
+import { CustomerSelect } from "./customer-select"
+import { ImageUpload } from "./image-upload"
 
 interface OrderFormData {
   order_number: string
   order_date: string
-  customer_name: string
-  customer_bin: string
+  customer_id: string
   product_name: string
   product_type: string
   size: string
@@ -28,6 +33,7 @@ interface OrderFormData {
   description: string
   status: string
   notes: string
+  image_urls: string[]
 }
 
 export function OrderForm() {
@@ -39,8 +45,7 @@ export function OrderForm() {
   const [formData, setFormData] = useState<OrderFormData>({
     order_number: `ORD-${Date.now()}`,
     order_date: new Date().toISOString().split("T")[0],
-    customer_name: "",
-    customer_bin: "",
+    customer_id: "",
     product_name: "",
     product_type: "summer",
     size: "",
@@ -48,10 +53,19 @@ export function OrderForm() {
     description: "",
     status: "pending",
     notes: "",
+    image_urls: [],
   })
 
   const [fabrics, setFabrics] = useState([{ name: "", color: "", consumption: "" }])
   const [zippers, setZippers] = useState([{ type: "", color: "", quantity: "" }])
+  const [assignedWorkers, setAssignedWorkers] = useState<string[]>([])
+
+  const toggleWorker = (workerId: string) => {
+    setAssignedWorkers((prev) => (prev.includes(workerId) ? prev.filter((id) => id !== workerId) : [...prev, workerId]))
+  }
+
+  const [workers, setWorkers] = useState<WorkersGeneral[]>()
+  const [customers, setCustomers] = useState<CustomerGeneral[]>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,21 +73,20 @@ export function OrderForm() {
     setError(null)
 
     try {
-        if(session?.id){
-            const data_request = {
-                general: formData,
-                zippers: zippers,
-                fabrics: fabrics,
-                user_id: session.id
-            }
-            const response = await Api.orders.create(data_request);
-            if(response){
-                toast.success(`Заказ успешно создан - ${formData.order_number}`)
-                router.push("/orders")
-            }
+      if (session?.id) {
+        const data_request = {
+          general: formData,
+          zippers: zippers,
+          fabrics: fabrics,
+          user_id: session?.id,
         }
-    } catch (error: any) {
-      setError(error.message)
+        const response = await Api.orders.create(data_request)
+        if (response) {
+          router.push("/orders")
+        }
+      }
+    } catch (error) {
+      toast.error(`${error}`)
     } finally {
       setIsLoading(false)
     }
@@ -95,14 +108,42 @@ export function OrderForm() {
     setZippers(zippers.filter((_, i) => i !== index))
   }
 
+  useEffect(() => {
+    const handleGetOrders = async () => {
+      try {
+        const response = await Api.workers.getList()
+        if (response) {
+          setWorkers(response)
+          const customers_response = await Api.customers.getList()
+          setCustomers(customers_response)
+        }
+      } catch (error) {
+        console.log(error)
+        toast.error(`Не удалось загрузить заказы: ${error}`)
+      } finally {
+      }
+    }
+    handleGetOrders()
+  }, [])
+
+  const filteredWorkers = workers?.filter((item) => item.role != "admin" && item.role != "manager")
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger className="cursor-pointer" value="basic">Основная информация</TabsTrigger>
-          <TabsTrigger className="cursor-pointer" value="materials">Материалы</TabsTrigger>
-          <TabsTrigger className="cursor-pointer" value="workers">Работники</TabsTrigger>
-          <TabsTrigger className="cursor-pointer" value="additional">Дополнительно</TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="basic">
+            Основная информация
+          </TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="materials">
+            Материалы
+          </TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="workers">
+            Работники
+          </TabsTrigger>
+          <TabsTrigger className="cursor-pointer" value="additional">
+            Дополнительно
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
@@ -136,26 +177,15 @@ export function OrderForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="customer_name">Заказчик</Label>
-                  <Input
-                    id="customer_name"
-                    placeholder="Наименование заказчика"
-                    value={formData.customer_name}
-                    onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                    required
-                  />
+                  {customers && (
+                    <CustomerSelect
+                      customers={customers}
+                      value={formData.customer_id}
+                      onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
+                      placeholder="Выберите заказчика..."
+                    />
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="customer_bin">БИН заказчика</Label>
-                  <Input
-                    id="customer_bin"
-                    placeholder="БИН"
-                    value={formData.customer_bin}
-                    onChange={(e) => setFormData({ ...formData, customer_bin: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="product_type">Тип изделия</Label>
                   <Select
@@ -174,6 +204,9 @@ export function OrderForm() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="product_name">Наименование изделия</Label>
                   <Input
@@ -235,6 +268,12 @@ export function OrderForm() {
                   rows={3}
                 />
               </div>
+
+              <ImageUpload
+                images={formData.image_urls}
+                onChange={(urls) => setFormData({ ...formData, image_urls: urls })}
+                maxImages={5}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -376,14 +415,54 @@ export function OrderForm() {
         </TabsContent>
 
         <TabsContent value="workers" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Работники</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-600 mb-4">Назначение работников будет доступно после создания заказа</p>
-            </CardContent>
-          </Card>
+          {filteredWorkers?.length ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Работники</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600 mb-4">Отметьте сотрудников, которых хотите назначить на заказ</p>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredWorkers.map((worker) => {
+                    const isSelected = assignedWorkers.includes(worker.id)
+
+                    return (
+                      <div
+                        key={worker.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition 
+                ${isSelected ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleWorker(worker.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-slate-800">{worker.name}</div>
+                          <RoleBadge role={worker.role} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Работники</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-left text-slate-500 py-5">
+                  Работники пока не добавлены <br />
+                  <span className="text-sm">
+                    Вы сможете назначить сотрудников на заказ, когда они появятся в системе
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="additional" className="space-y-6">

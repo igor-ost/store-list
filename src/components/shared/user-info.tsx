@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authStore } from "@/store/auth-store";
 
-export function UserInfo() {
+export function UserInfo({variant = "default"}:{variant?: "default" | "text"}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const setSession = authStore((state) => state.setSession)
@@ -29,9 +29,16 @@ export function UserInfo() {
 
     return (
     <>
+      {variant == "default" && (
         <Button variant="ghost" size="sm" className="text-primary-foreground">
             {email}
         </Button>
+      )}
+      {variant == "text" && (
+        <Button size="sm" className="text-primary-foreground">
+            {email}
+        </Button>
+      )}
     </>
     );
 }

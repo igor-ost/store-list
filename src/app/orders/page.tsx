@@ -9,13 +9,16 @@ import { useEffect, useState } from "react"
 import { OrderGeneral } from "@/@types/orders-types"
 import { toast } from "sonner"
 import { Api } from "@/service/api-clients"
+import { OrdersListSkeleton } from "@/components/loading/order-list"
 
 export default function OrdersPage() {
 
   const [orders,setOrders] = useState<OrderGeneral[]>()
+  const [isLoading,setIsLoading] = useState(true);
 
   useEffect(()=>{
     const handleGetOrders = async () => {
+      setIsLoading(true)
       try {
         const response = await Api.orders.getList();
         if(response){
@@ -25,7 +28,7 @@ export default function OrdersPage() {
         console.log(error)
         toast.error(`Не удалось загрузить заказы: ${error}`)
       }finally{
-        
+        setIsLoading(false)
       }
     }
     handleGetOrders()
@@ -47,9 +50,11 @@ export default function OrdersPage() {
             </Button>
           </Link>
         </div>
-        {orders && (
-            <OrdersList orders={orders} />
-        )}
+        {!isLoading && orders ? 
+          <OrdersList orders={orders} />
+        :
+          <OrdersListSkeleton/>
+        }
       </main>
     </div>
   )

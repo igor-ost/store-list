@@ -1,16 +1,20 @@
+import { CustomerGeneral } from "./customer-types";
+
 export type CreateOrderRequest = {
     general: General,
     zippers: Zippers[],
     fabrics: Fabrics[]
+    user_id? :string;
 }
 
 export type OrderGeneral = {
     id: string;
     order_number: string
     order_date: string
-    customer_name: string
-    customer_bin: string
+    customer_id: string
+    customer: CustomerGeneral
     product_name: string
+    image_urls:    string[]
     product_type: string
     size: string
     quantity: number,
@@ -21,8 +25,7 @@ export type OrderGeneral = {
  type General = {
     order_number: string
     order_date: string
-    customer_name: string
-    customer_bin: string
+    customer_id: string
     product_name: string
     product_type: string
     size: string
@@ -85,12 +88,13 @@ export type OrderInfo = {
     id: string;
     order_number: string
     order_date: string
-    customer_name: string
-    customer_bin: string
+    customer_id: string
+    customer: CustomerGeneral
     product_name: string
     product_type: string
     size: string
     quantity: number,
+    image_urls:    string[]
     description: string
     status: string
     notes: string,

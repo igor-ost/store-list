@@ -11,6 +11,7 @@ import { DeleteDialog } from "./delete-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { WorkersGeneral } from "@/@types/workers-types"
+import RoleBadge from "./role-badge"
 
 
 
@@ -66,32 +67,6 @@ export function WorkersList({ workers }: WorkersListProps) {
     }
 
 
-    function RoleBadge({ role }: { role: string }) {
-        let badgeClass = ""
-        let roleName = ""
-        switch (role) {
-            case "admin":
-            badgeClass = "bg-red-100 text-red-700 border-red-200"
-            roleName = "Админ"
-            break
-            case "manager":
-            badgeClass = "bg-blue-100 text-blue-700 border-blue-200"
-            roleName = "Менеджер"
-            break
-            case "user":
-            badgeClass = "bg-green-100 text-green-700 border-green-200"
-            roleName = "Пользователь"
-            break
-            default:
-            badgeClass = "bg-gray-100 text-gray-700 border-gray-200"
-        }
-
-        return (
-            <Badge variant="outline" className={badgeClass}>
-            {roleName}
-            </Badge>
-        )
-        }
 
     return (
         <div className="space-y-4">
@@ -196,7 +171,7 @@ export function WorkersList({ workers }: WorkersListProps) {
                                                     <Eye className="h-3.5 w-3.5" />
                                                 </Button>
                                             </Link> */}
-                                            <Link href={`/workers/${worker.id}/edit`}>
+                                            <Link href={`/workers/edit/${worker.id}`}>
                                                 <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
                                                     <Edit className="h-3.5 w-3.5" />
                                                 </Button>

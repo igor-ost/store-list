@@ -42,7 +42,7 @@ export function OrdersList({ orders }: OrdersListProps) {
     const filteredOrders = ordersList.filter((order) => {
         const matchesSearch =
             order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.product_name.toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesStatus = statusFilter === "all" || order.status === statusFilter
@@ -68,7 +68,7 @@ export function OrdersList({ orders }: OrdersListProps) {
         switch (status) {
             case "pending":
                 return (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="destructive" className="text-xs">
                         Ожидает
                     </Badge>
                 )
@@ -200,11 +200,11 @@ export function OrdersList({ orders }: OrdersListProps) {
                                         <div className="flex items-center gap-3 mb-2">
                                             <h3 className="text-base font-semibold text-slate-800">{order.order_number}</h3>
                                             {getStatusBadge(order.status)}
-                                        </div>
+                                        </div> 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                                             <div>
                                                 <span className="text-slate-500 text-xs">Заказчик:</span>
-                                                <div className="font-medium">{order.customer_name}</div>
+                                                <div className="font-medium">{order.customer.name}</div>
                                             </div>
                                             <div>
                                                 <span className="text-slate-500 text-xs">Изделие:</span>

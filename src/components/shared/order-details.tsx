@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Package, Hash, Palette, Ruler } from "lucide-react"
+import { Calendar, User, Package, Hash, Palette, Ruler, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { OrderInfo } from "@/@types/orders-types"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { OrderDetailsSkeleton } from "../loading/order-details"
+import Image from "next/image"
+import { ImageViewer } from "./image-viewer"
 
 
 interface OrderDetailsProps {
@@ -18,7 +20,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "pending":
-                return <Badge variant="secondary">Ожидает</Badge>
+                return <Badge variant="destructive">Ожидает</Badge>
             case "in_progress":
                 return <Badge className="bg-blue-100 text-blue-800">В работе</Badge>
             case "completed":
@@ -31,6 +33,8 @@ export function OrderDetails({ id }: OrderDetailsProps) {
     }
 
     const [order, setOrder] = useState<OrderInfo | null>(null)
+    const [images, setImages] = useState<string[]>([])
+    const [viewerIndex, setViewerIndex] = useState<number | null>(null)
 
     useEffect(() => {
         const handleGetOrders = async () => {
@@ -38,6 +42,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
                 const response = await Api.orders.getOrder(id);
                 if (response) {
                     setOrder(response)
+                    setImages(response.image_urls)
                 }
             } catch (error) {
                 console.log(error)
@@ -82,7 +87,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
                             <User className="h-5 w-5 text-slate-500" />
                             <div>
                                 <div className="text-sm text-slate-500">Заказчик</div>
-                                <div className="font-semibold">{order.customer_name}</div>
+                                <div className="font-semibold">{order.customer.name}</div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -103,6 +108,26 @@ export function OrderDetails({ id }: OrderDetailsProps) {
                             <div className="text-slate-700 bg-slate-50 p-3 rounded-lg">{order.notes}</div>
                         </div>
                     )}
+                    {images.length > 0 && (
+                        <div className="mt-6">
+                            <div className="text-sm text-slate-500 mb-2">Фотографии</div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                {images.map((url, index) => (
+                                    <div
+                                        key={index}
+                                        className="relative group aspect-square rounded-lg overflow-hidden border border-slate-200"
+                                    >
+                                        <button type="button" onClick={() => setViewerIndex(index)} className="w-full h-full cursor-zoom-in">
+                                            <Image src={url || "/placeholder.svg"} alt={`Фото ${index + 1}`} fill className="object-cover" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            {viewerIndex !== null && (
+                                <ImageViewer images={images} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -117,7 +142,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
                                 <div
                                     key={fabric.id}
                                     className="p-4 rounded-xl border bg-white shadow-sm hover:shadow-md transition"
-                                >   
+                                >
                                     <div className="mt-1 flex items-center gap-2 text-sm text-slate-600">
                                         <Package className="w-4 h-4 text-slate-500" />
                                         <span>Наименование ткани:</span>
