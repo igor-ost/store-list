@@ -33,7 +33,7 @@ export function WorkerForm() {
     email: "",
     name: "",
     password: "",
-    role: "user"
+    role: "manager"
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +119,8 @@ export function WorkerForm() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="manager">Менеджер</SelectItem>
-                      <SelectItem value="user">Пользователь</SelectItem>
+                      <SelectItem value="technologist">Технолог</SelectItem>
+                      <SelectItem value="accountant">Бухгалтер</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

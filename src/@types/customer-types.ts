@@ -38,3 +38,12 @@ export type CustomerGeneral = {
   createdAt: string
   updatedAt: string 
 }
+
+export type RemoveSuccessResponse = {
+    success: boolean;
+}
+
+export type RemoveErrorResponse = {
+    error:string;
+    status:string
+}

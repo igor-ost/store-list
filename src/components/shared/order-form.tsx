@@ -19,8 +19,9 @@ import type { WorkersGeneral } from "@/@types/workers-types"
 import { Checkbox } from "../ui/checkbox"
 import RoleBadge from "./role-badge"
 import type { CustomerGeneral } from "@/@types/customer-types"
-import { CustomerSelect } from "./customer-select"
+import { CustomerSelect } from "./references/customer-select"
 import { ImageUpload } from "./image-upload"
+import { Skeleton } from "../ui/skeleton"
 
 interface OrderFormData {
   order_number: string
@@ -39,6 +40,9 @@ interface OrderFormData {
 export function OrderForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+
+  const [customerLoading, setCustomerLoading] = useState(false)
+
   const [error, setError] = useState<string | null>(null)
   const { session } = authStore()
 
@@ -111,6 +115,7 @@ export function OrderForm() {
   useEffect(() => {
     const handleGetOrders = async () => {
       try {
+        setCustomerLoading(true)
         const response = await Api.workers.getList()
         if (response) {
           setWorkers(response)
@@ -121,10 +126,13 @@ export function OrderForm() {
         console.log(error)
         toast.error(`Не удалось загрузить заказы: ${error}`)
       } finally {
+        setCustomerLoading(false)
       }
     }
     handleGetOrders()
   }, [])
+
+
 
   const filteredWorkers = workers?.filter((item) => item.role != "admin" && item.role != "manager")
 
@@ -175,6 +183,13 @@ export function OrderForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {customerLoading ? 
+                  <div>
+                    <Label htmlFor="customer_name">Заказчик</Label>
+                    <Skeleton className="w-full h-8"/>
+                  </div>
+                :
+
                 <div>
                   <Label htmlFor="customer_name">Заказчик</Label>
                   {customers && (
@@ -186,6 +201,8 @@ export function OrderForm() {
                     />
                   )}
                 </div>
+
+                }
                 <div>
                   <Label htmlFor="product_type">Тип изделия</Label>
                   <Select

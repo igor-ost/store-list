@@ -7,16 +7,21 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table as TableComponent, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { CustomerDialog } from "@/components/shared/customer-dialog"
+import { CustomerDialog } from "@/components/shared/references/customer-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
-import type { GetListSuccessResponse } from "@/@types/customer-types"
-import { DeleteDialog } from "./delete-dialog"
-import { CustomerReferenceSkeleton } from "../loading/customer-reference"
+import { DeleteDialog } from "../delete-dialog"
+import { CustomerReferenceSkeleton } from "../../loading/customer-reference"
+
+type Customer = {
+  id: string
+  name: string
+  bin: string
+}
 
 
 export default function CustomerReference() {
-  const [customers, setCustomers] = useState<GetListSuccessResponse[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -38,8 +43,42 @@ export default function CustomerReference() {
     fetchCustomers()
   }, [])
 
-  const handleCreate = (data:GetListSuccessResponse) => {
-    setCustomers((prev) => [...prev, data]);
+  const handleCreate = async (name:string,bin:string) => {
+    try {
+      const data = {name:name,bin:bin}
+      setLoading(true)
+      const response = await Api.customers.create(data)
+      if(response){
+        setCustomers((prev) => [...prev, { ...data, id: Date.now().toString() }])
+      }
+      toast.success(`Заказчик ${data.name}, создан`)
+    } catch (error) {
+      toast.error(`Ошибка: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdate = async (id:string,name:string,bin:string) => {
+    if(id){
+      const data = {
+        id: id,
+        name: name,
+        bin: bin
+      }
+       try {
+        const response = await Api.customers.update(data)
+        if (response) {
+          setCustomers((prev) => prev.map((item) => (item.id === data.id ? data : item)))
+          toast.success(`Заказчик - ${name}, был успешно обновлен`)
+        }
+      } catch (error) {
+        console.error("Ошибка при обновлении:", error)
+        toast.error(`${error}`)
+      } finally {
+        setLoading(false)
+      }
+    }
   }
 
   const handleDelete = async (id: string, name: string) => {
@@ -77,7 +116,7 @@ export default function CustomerReference() {
 
             <div className="flex items-center gap-4">
 
-              <CustomerDialog onCustomerSaved={handleCreate}>
+              <CustomerDialog onUpdate={handleUpdate} onCreate={handleCreate}>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
                   Добавить заказчика
@@ -119,7 +158,6 @@ export default function CustomerReference() {
                       <TableRow>
                         <TableHead className="w-[40%]">Название</TableHead>
                         <TableHead className="w-[20%]">БИН</TableHead>
-                        <TableHead className="w-[20%]">Дата создания</TableHead>
                         <TableHead className="w-[20%] text-right">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -136,14 +174,13 @@ export default function CustomerReference() {
                               {customer.bin}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {new Date(customer.createdAt).toLocaleDateString("ru-RU")}
-                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="sm" >
-                                <Edit className="w-4 h-4" />
-                              </Button>
+                              <CustomerDialog customer={customer }onUpdate={handleUpdate} onCreate={handleCreate}>
+                                <Button variant="ghost" size="sm" >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </CustomerDialog>
                               <DeleteDialog
                                 id={customer.id}
                                 title="Удалить заказчика"

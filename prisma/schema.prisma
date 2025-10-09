@@ -32,46 +32,9 @@ model orders {
   updated_at    DateTime  @default(now())
   image_urls    String[]
   customer      customer  @relation(fields: [customer_id], references: [id], onDelete: Cascade)
-  fabrics       fabrics[]
-  zippers       zippers[]
 
   @@map("orders")
 }
-
-model fabrics {
-  id              String   @id @default(uuid())
-  name            String
-  color           String?
-  composition     String?
-  width_cm        Decimal?
-  price_per_meter Decimal?
-  supplier        String?
-  stock_meters    Decimal  @default(0)
-  user_id         String
-  created_at      DateTime @default(now())
-
-  order_id        String
-  order           orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
-
-  @@map("fabrics")
-}
-
-model zippers {
-  id             String   @id @default(uuid())
-  type           String
-  length_cm      Int?
-  color          String?
-  price_per_unit Decimal?
-  supplier       String?
-  stock_quantity Int      @default(0)
-  user_id        String
-  created_at     DateTime @default(now())
-  order_id       String
-  order          orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
-
-  @@map("zippers")
-}
-
 
 model customer {
   id        String   @id @default(uuid())
@@ -82,4 +45,45 @@ model customer {
 
   orders    orders[]
   @@map("customers")
+}
+
+model zippers {
+  id  String @id @default(uuid())
+  color String 
+  type  String
+  qty Int
+}
+
+model threads {
+  id  String @id @default(uuid())
+  color String 
+  type  String
+}
+
+model buttons {
+  id  String @id @default(uuid())
+  color String 
+  type  String
+  qty Int
+}
+
+model fabrics {
+  id  String @id @default(uuid())
+  type String
+  name String
+  color String? 
+  unit  String
+  price Int?
+  qty Int?
+}
+
+model accessories {
+  id  String @id @default(uuid())
+  name String
+  qty Int
+}
+
+model velcro {
+  id  String @id @default(uuid())
+  name String
 }

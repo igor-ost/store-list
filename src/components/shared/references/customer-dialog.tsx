@@ -12,63 +12,55 @@ import { Plus, Edit } from "lucide-react"
 import { GetListSuccessResponse } from "@/@types/customer-types"
 import { Api } from "@/service/api-clients"
 
+type Customer = {
+  id: string
+  name: string
+  bin: string
+}
 
 
 interface CustomerDialogProps {
-    customer?: GetListSuccessResponse
-    onCustomerSaved: (customer: GetListSuccessResponse) => void
+    customer?: Customer
+    onCreate: (name:string,bin:string) => void
+    onUpdate: (id:string,name:string,bin:string) => void
     children?: React.ReactNode;
 }
 
-export function CustomerDialog({ customer, onCustomerSaved, children }: CustomerDialogProps) {
+export function CustomerDialog({ customer, onCreate, onUpdate,children }: CustomerDialogProps) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [formData, setFormData] = useState({
-        name: customer?.name || "",
-        bin: customer?.bin || "",
-    })
+    const [formData, setFormData] = useState<Customer>(
+        customer || {
+        id: "",
+        name: "",
+        bin: ""
+        },
+    )
 
-    const isEditing = !!customer
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setIsLoading(true)
-        try {
-            const response = await Api.customers.create(formData)
-            onCustomerSaved(response)
-            setOpen(false)
-            setFormData({ name: "", bin: "" })
-            toast.success(`Заказчик ${formData.name}, создан`)
-        } catch (error) {
-            toast.error(`Ошибка: ${error}`)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const handleOpenChange = (newOpen: boolean) => {
-        setOpen(newOpen)
-        if (!newOpen) {
-            setFormData({
-                name: customer?.name || "",
-                bin: customer?.bin || "",
-            })
+        setOpen(false)
+        if (customer) {
+            onUpdate(formData.id,formData.name,formData.bin)
+        }else{
+            onCreate(formData.name,formData.bin)
         }
     }
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {children || (
                     <Button className="flex items-center gap-2">
-                        {isEditing ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                        {isEditing ? "Редактировать" : "Добавить заказчика"}
+                        {customer ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        {customer ? "Редактировать" : "Добавить заказчика"}
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? "Редактировать заказчика" : "Добавить заказчика"}</DialogTitle>
+                    <DialogTitle>{customer ? "Редактировать заказчика" : "Добавить заказчика"}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
@@ -97,7 +89,7 @@ export function CustomerDialog({ customer, onCustomerSaved, children }: Customer
                             Отмена
                         </Button>
                         <Button type="submit" disabled={isLoading}>
-                            {isLoading ? "Сохранение..." : isEditing ? "Обновить" : "Создать"}
+                            {isLoading ? "Сохранение..." : customer ? "Обновить" : "Создать"}
                         </Button>
                     </div>
                 </form>

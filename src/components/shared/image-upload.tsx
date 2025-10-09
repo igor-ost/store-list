@@ -148,7 +148,7 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
               </span>
             </Button>
           </label>
-          <p className="text-xs text-slate-500 mt-2">Поддерживаются JPG, PNG, WebP. Максимум 5MB на файл.</p>
+          <p className="text-xs text-slate-500 mt-2">Поддерживаются JPG, PNG, WebP. Максимум 20MB на файл.</p>
         </div>
       )}
 
