@@ -85,7 +85,7 @@ export function ThreadDialog({ children, thread, onCreate, onUpdate }: ThreadDia
             <Input
               id="price"
               type="number"
-              value={formData.price}
+              value={formData.price || ""}
               onChange={(e) => setFormData({ ...formData, price: Number.parseInt(e.target.value) || 0 })}
               required
             />
@@ -95,7 +95,7 @@ export function ThreadDialog({ children, thread, onCreate, onUpdate }: ThreadDia
             <Input
               id="qty"
               type="number"
-              value={formData.qty}
+              value={formData.qty || ""}
               onChange={(e) => setFormData({ ...formData, qty: Number.parseInt(e.target.value) || 0 })}
               required
             />

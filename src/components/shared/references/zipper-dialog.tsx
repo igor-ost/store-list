@@ -86,7 +86,7 @@ export function ZipperDialog({ children, zipper, onCreate,onUpdate }: ZipperDial
             <Input
               id="price"
               type="number"
-              value={formData.price}
+              value={formData.price || ""}
               onChange={(e) => setFormData({ ...formData, price: Number.parseInt(e.target.value) || 0 })}
               required
             />
@@ -96,7 +96,7 @@ export function ZipperDialog({ children, zipper, onCreate,onUpdate }: ZipperDial
             <Input
               id="qty"
               type="number"
-              value={formData.qty}
+              value={formData.qty || ""}
               onChange={(e) => setFormData({ ...formData, qty: Number.parseInt(e.target.value) || 0 })}
               required
             />
