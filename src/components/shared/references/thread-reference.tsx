@@ -1,57 +1,50 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { ThreadDialog } from "./thread-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
+import { ReferenceSkeleton } from "@/components/loading/reference"
 
 type Thread = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
+  qty: number
 }
 
-export default function ThreadsReferences() {
-  const [threads, setThreads] = useState<Thread[]>([])
+type Props = {
+  threads: Thread[]
+  loading: boolean
+  setThreads: React.Dispatch<SetStateAction<Thread[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
+
+
+export default function ThreadsReferences({threads,setThreads,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const [loading, setLoading] = useState(false)
-
-  const fetchThreads = async () => {
-    try {
-      const response = await Api.threads.getList()
-      if (response) {
-        setThreads(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-      fetchThreads()
-  }, [])
-
-
-  const handleCreate = async (type:string,color:string) => {
+  const handleCreate = async (type: string, color: string,unit:string,price:number, qty: number) => {
     try {
       const data = {
-        type:type,
-        color:color,
+        type: type,
+        color: color,
+        unit:unit,
+        price:price,
+        qty: qty
       }
       setLoading(true)
       const response = await Api.threads.create(data)
-      if(response){
+      if (response) {
         setThreads((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Нитка ${data.color}-${data.type}, создана`)
@@ -65,14 +58,17 @@ export default function ThreadsReferences() {
 
 
 
-  const handleUpdate = async (id:string,type:string,color:string) => {
-    if(id){
+  const handleUpdate = async (id: string, type: string, color: string,unit:string,price:number, qty: number) => {
+    if (id) {
       const data = {
-        id:id,
-        type:type,
-        color:color,
+        id: id,
+        type: type,
+        color: color,
+        unit:unit,
+        price:price,
+        qty: qty
       }
-       try {
+      try {
         const response = await Api.threads.update(data)
         if (response) {
           setThreads((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -108,6 +104,10 @@ export default function ThreadsReferences() {
       thread.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
       thread.type.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,6 +157,8 @@ export default function ThreadsReferences() {
                   <TableRow>
                     <TableHead className="w-[40%]">Цвет</TableHead>
                     <TableHead className="w-[40%]">Тип</TableHead>
+                    <TableHead className="w-[20%]">Цена</TableHead>
+                    <TableHead className="w-[20%]">Количество</TableHead>
                     <TableHead className="w-[20%] text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -166,6 +168,12 @@ export default function ThreadsReferences() {
                       <TableCell className="font-medium">{thread.color}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{thread.type}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{thread.price ? `${thread.price} ₸` : "-"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={thread.qty < 50 ? "destructive" : "default"}>{thread.qty} {thread.unit}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

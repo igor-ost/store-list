@@ -34,12 +34,11 @@ export async function GET() {
     },
 })
     return NextResponse.json(workers, { status: 200 });
-  } catch (error: any) {
-    console.error("Error fetching workers:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch workers", details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
   }
 }
 

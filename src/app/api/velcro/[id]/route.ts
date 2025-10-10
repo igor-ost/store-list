@@ -2,16 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../../../prisma/prisma-client";
 
 export async function DELETE(
-  req: {id:string},
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: Promise<{ id: string }>}
 ) {
   try {
-    const velcro = await params.id
+    const { id } = await context.params;
 
     await prisma.velcro.delete({
-      where: { id: velcro },
+      where: { id: id },
     })
-
+    console.log(req)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Ошибка удаления:", error)
@@ -24,29 +24,29 @@ export async function DELETE(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }>}
 ) {
   try {
+      const { id } = await context.params;
     const velcro = await prisma.velcro.findUnique({
       where: {
-        id: (params.id)
+        id: (id)
       },
     })
 
     if (!velcro) {
       return NextResponse.json(
-        { error: `accessories with id ${params.id} not found` },
+        { error: `accessories with id ${id} not found` },
         { status: 404 }
       )
     }
-
+    console.log(req)
     return NextResponse.json(velcro, { status: 200 })
-  } catch (error: any) {
-    console.error("Error fetching :", error)
-    return NextResponse.json(
-      { error: "Failed to fetch", details: error.message },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
   }
 }
 
@@ -54,22 +54,22 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }>}
 ) {
   try {
+    const { id } = await context.params;
     const data = await req.json();
 
     const velcro = await prisma.velcro.update({
-      where: { id: params.id },
+      where: { id: id },
       data: data,
     });
-
+  
     return NextResponse.json(velcro, { status: 200 });
-  } catch (error: any) {
-    console.error("Ошибка обновления:", error);
-    return NextResponse.json(
-      { error: "Не удалось обновить", details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 
-export function CustomerReferenceSkeleton() {
+export function ReferenceSkeleton() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">

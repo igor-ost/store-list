@@ -1,60 +1,52 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { ZipperDialog } from "./zipper-dialog"
 import { toast } from "sonner"
 import { Api } from "@/service/api-clients"
+import { ReferenceSkeleton } from "@/components/loading/reference"
 
 type Zipper = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
   qty: number
 }
 
+type Props = {
+  zippers: Zipper[]
+  loading: boolean
+  setZippers: React.Dispatch<SetStateAction<Zipper[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
 
 
-export default function ZippersReferences() {
-  const [zippers, setZippers] = useState<Zipper[]>([])
+export default function ZippersReferences({zippers,setZippers,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  const fetchButtons = async () => {
-    try {
-      const response = await Api.zippers.getList()
-      if (response) {
-        setZippers(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-      fetchButtons()
-  }, [])
 
 
-  const handleCreate = async (color:string,type:string,qty:number) => {
+
+  const handleCreate = async (color: string, type: string, unit:string,price:number, qty: number) => {
     try {
       const data = {
-        color:color,
-        type:type,
-        qty:qty
+        color: color,
+        type: type,
+        unit:unit,
+        price:price,
+        qty: qty
       }
       setLoading(true)
       const response = await Api.zippers.create(data)
-      if(response){
+      if (response) {
         setZippers((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Молния ${data.color}-${data.type}, создана`)
@@ -67,15 +59,17 @@ export default function ZippersReferences() {
 
 
 
-  const handleUpdate = async (id:string,color:string,type:string,qty:number) => {
-    if(id){
+  const handleUpdate = async (id: string, color: string, type: string,unit:string,price:number, qty: number) => {
+    if (id) {
       const data = {
-        id:id,
-        color:color,
-        type:type,
-        qty:qty
+        id: id,
+        color: color,
+        type: type,
+        unit:unit,
+        price:price,
+        qty: qty
       }
-       try {
+      try {
         const response = await Api.zippers.update(data)
         if (response) {
           setZippers((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -111,6 +105,10 @@ export default function ZippersReferences() {
       zipper.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
       zipper.type.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,6 +158,7 @@ export default function ZippersReferences() {
                   <TableRow>
                     <TableHead className="w-[30%]">Цвет</TableHead>
                     <TableHead className="w-[30%]">Тип</TableHead>
+                    <TableHead className="w-[20%]">Цена</TableHead>
                     <TableHead className="w-[20%]">Количество</TableHead>
                     <TableHead className="w-[20%] text-right">Действия</TableHead>
                   </TableRow>
@@ -172,8 +171,12 @@ export default function ZippersReferences() {
                         <Badge variant="secondary">{zipper.type}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={zipper.qty < 50 ? "destructive" : "default"}>{zipper.qty} шт.</Badge>
+                        <Badge variant="outline">{zipper.price ? `${zipper.price} ₸` : "-"}</Badge>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={zipper.qty < 50 ? "destructive" : "default"}>{zipper.qty} {zipper.unit}</Badge>
+                      </TableCell>
+
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <ZipperDialog zipper={zipper} onUpdate={handleUpdate} onCreate={handleCreate}>

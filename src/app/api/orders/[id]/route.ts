@@ -4,12 +4,11 @@ import { unlink } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
 
-export async function DELETE(req: { id: string; order_number: string }, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request,  context: { params: Promise<{ id: string }> }) {
   try {
-    const orderId = params.id
-
+    const { id } = await context.params;
     const order = await prisma.orders.findUnique({
-      where: { id: orderId },
+      where: { id: id },
       select: { image_urls: true },
     })
 
@@ -26,23 +25,15 @@ export async function DELETE(req: { id: string; order_number: string }, { params
           }
         } catch (fileError) {
           console.error(`[v0] Error deleting image file ${imageUrl}:`, fileError)
-          // Continue with deletion even if file deletion fails
+        
         }
       }
     }
 
-    await prisma.zippers.deleteMany({
-      where: { order_id: orderId },
-    })
-
-    await prisma.fabrics.deleteMany({
-      where: { order_id: orderId },
-    })
-
     await prisma.orders.delete({
-      where: { id: orderId },
+      where: { id: id },
     })
-
+    console.log(req)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Ошибка удаления заказа:", error)
@@ -52,33 +43,31 @@ export async function DELETE(req: { id: string; order_number: string }, { params
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }>}
 ) {
   try {
+    const { id } = await context.params;
     const order = await prisma.orders.findUnique({
       where: {
-        id: (params.id)
+        id: (id)
       },
       include: {
-        fabrics: true,
-        zippers: true,
         customer: true,
       },
     })
 
     if (!order) {
       return NextResponse.json(
-        { error: `Order with id ${params.id} not found` },
+        { error: `Order with id ${id} not found` },
         { status: 404 }
       )
     }
-
+    console.log(req)
     return NextResponse.json(order, { status: 200 })
-  } catch (error: any) {
-    console.error("Error fetching order:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch order", details: error.message },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
   }
 }

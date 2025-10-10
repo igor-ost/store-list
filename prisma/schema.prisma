@@ -51,6 +51,8 @@ model zippers {
   id  String @id @default(uuid())
   color String 
   type  String
+  unit  String
+  price Int?
   qty Int
 }
 
@@ -58,12 +60,17 @@ model threads {
   id  String @id @default(uuid())
   color String 
   type  String
+  unit  String
+  price Int?
+  qty Int
 }
 
 model buttons {
   id  String @id @default(uuid())
   color String 
   type  String
+  unit  String
+  price Int?
   qty Int
 }
 
@@ -80,10 +87,15 @@ model fabrics {
 model accessories {
   id  String @id @default(uuid())
   name String
+  unit  String
+  price Int?
   qty Int
 }
 
 model velcro {
   id  String @id @default(uuid())
   name String
+  unit  String
+  price Int?
+  qty Int?
 }

@@ -19,6 +19,7 @@ import { OrderGeneral } from "@/@types/orders-types"
 import { DeleteDialog } from "./delete-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
+import { OrdersListSkeleton } from "../loading/order-list"
 
 
 
@@ -105,6 +106,10 @@ export function OrdersList({ orders }: OrdersListProps) {
         }finally{
             setIsLoading(false)
         }
+    }
+
+    if(isLoading){
+        return <OrdersListSkeleton/>
     }
 
     return (

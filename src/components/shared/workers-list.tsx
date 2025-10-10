@@ -1,10 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { DeleteDialog } from "./delete-dialog"
@@ -12,6 +11,7 @@ import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { WorkersGeneral } from "@/@types/workers-types"
 import RoleBadge from "./role-badge"
+import { WorkerListSkeleton } from "../loading/worker-list"
 
 
 
@@ -66,7 +66,9 @@ export function WorkersList({ workers }: WorkersListProps) {
         }
     }
 
-
+    if(isLoading){
+        return <WorkerListSkeleton/>
+    }
 
     return (
         <div className="space-y-4">

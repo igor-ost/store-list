@@ -1,54 +1,42 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { AccessoryDialog } from "./accessory-dialog"
+import { ReferenceSkeleton } from "@/components/loading/reference"
 
 type Accessory = {
   id: string
   name: string
+  unit: string
+  price: number
   qty: number
 }
 
+type Props = {
+  accessories: Accessory[]
+  loading: boolean
+  setAccessories: React.Dispatch<SetStateAction<Accessory[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
 
-export default function AccessoriesReferences() {
-  const [accessories, setAccessories] = useState<Accessory[]>([])
+export default function AccessoriesReferences({accessories,setAccessories,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(false)
 
-  const fetchAccessories = async () => {
+  const handleCreate = async (name: string,unit:string,price:number, qty: number) => {
     try {
-      const response = await Api.accessories.getList()
-      if (response) {
-        setAccessories(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAccessories()
-  }, [])
-
-  const handleCreate = async (name:string,qty:number) => {
-    try {
-      const data = {name:name,qty:qty}
+      const data = { name: name, unit:unit,price:price, qty: qty }
       setLoading(true)
       const response = await Api.accessories.create(data)
-      if(response){
+      if (response) {
         setAccessories((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Фурнитура ${data.name}, создан`)
@@ -59,14 +47,16 @@ export default function AccessoriesReferences() {
     }
   }
 
-  const handleUpdate = async (id:string,name:string,qty:number) => {
-    if(id){
+  const handleUpdate = async (id: string, name: string,unit:string,price:number, qty: number) => {
+    if (id) {
       const data = {
         id: id,
         name: name,
-        qty: qty
+        unit:unit,
+        price:price,
+        qty:qty
       }
-       try {
+      try {
         const response = await Api.accessories.update(data)
         if (response) {
           setAccessories((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -86,7 +76,7 @@ export default function AccessoriesReferences() {
       const response = await Api.accessories.removeById(id)
       if (response.success) {
         setAccessories((prev) => prev.filter((item) => item.id !== id))
-        toast.success(`Фурнитура - ${name}, была успешно удалена`)
+        toast.success(`Фурнитура была успешно удалена`)
       }
     } catch (error) {
       console.error("Ошибка при удалении:", error)
@@ -99,6 +89,10 @@ export default function AccessoriesReferences() {
   const filteredAccessories = accessories.filter((accessory) =>
     accessory.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,6 +143,7 @@ export default function AccessoriesReferences() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[60%]">Название</TableHead>
+                    <TableHead className="w-[20%]">Цена</TableHead>
                     <TableHead className="w-[20%]">Количество</TableHead>
                     <TableHead className="w-[20%] text-right">Действия</TableHead>
                   </TableRow>
@@ -157,8 +152,12 @@ export default function AccessoriesReferences() {
                   {filteredAccessories.map((accessory) => (
                     <TableRow key={accessory.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{accessory.name}</TableCell>
+
                       <TableCell>
-                        <Badge variant={accessory.qty < 100 ? "destructive" : "default"}>{accessory.qty} шт.</Badge>
+                        <Badge variant="outline">{accessory.price ? `${accessory.price} ₸` : "-"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={accessory.qty < 50 ? "destructive" : "default"}>{accessory.qty} {accessory.unit}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

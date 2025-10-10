@@ -29,8 +29,12 @@ export async function GET(request: Request) {
     let payload: JwtPayload | string;
     try {
       payload = jwt.verify(token, process.env.JWT_SECRET as string);
-    } catch (err) {
-      return NextResponse.json({ error: "Неверный токен" }, { status: 401 });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
     }
     
     const p = typeof payload === "string" ? undefined : (payload as JwtPayload & { id?: string | number });
@@ -41,7 +45,7 @@ export async function GET(request: Request) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId as any },
+      where: { id: userId as string },
       select: {
         id: true,
         email: true,

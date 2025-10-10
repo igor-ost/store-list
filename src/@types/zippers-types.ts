@@ -2,6 +2,8 @@ export type GetListSuccessResponse = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
   qty: number
 }
 export type GetListErrorResponse = {
@@ -13,6 +15,8 @@ export type createSuccessResponse = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
   qty: number
 }
 export type createErrorResponse = {
@@ -27,11 +31,4 @@ export type RemoveSuccessResponse = {
 export type RemoveErrorResponse = {
     error:string;
     status:string
-}
-
-export type General = {
-  id: string
-  color: string
-  type: string
-  qty: number
 }

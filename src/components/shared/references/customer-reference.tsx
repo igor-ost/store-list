@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, SetStateAction } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,7 @@ import { CustomerDialog } from "@/components/shared/references/customer-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { DeleteDialog } from "../delete-dialog"
-import { CustomerReferenceSkeleton } from "../../loading/customer-reference"
+import { ReferenceSkeleton } from "../../loading/reference"
 
 type Customer = {
   id: string
@@ -19,29 +19,15 @@ type Customer = {
   bin: string
 }
 
+type Props = {
+  customers: Customer[]
+  loading: boolean
+  setCustomers: React.Dispatch<SetStateAction<Customer[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
 
-export default function CustomerReference() {
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
+export default function CustomerReference({customers,setCustomers,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await Api.customers.getList()
-      if (response) {
-        setCustomers(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке заказчиков:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchCustomers()
-  }, [])
 
   const handleCreate = async (name:string,bin:string) => {
     try {
@@ -102,7 +88,7 @@ export default function CustomerReference() {
   )
 
   if (loading) {
-    return <CustomerReferenceSkeleton/>
+    return <ReferenceSkeleton/>
   }
 
   return (

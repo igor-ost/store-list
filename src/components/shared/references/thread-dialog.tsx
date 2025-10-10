@@ -7,27 +7,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SelectUnit } from "../select-unit"
 
 type Thread = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
+  qty: number
 }
 
 type ThreadDialogProps = {
   children: ReactNode
   thread?: Thread
-  onCreate: (type:string,color:string) => void
-  onUpdate: (id:string,type:string,color:string) => void
+  onCreate: (type: string, color: string, unit: string, price: number, qty: number) => void
+  onUpdate: (id: string, type: string, color: string, unit: string, price: number, qty: number) => void
 }
 
-export function ThreadDialog({ children, thread, onCreate,onUpdate }: ThreadDialogProps) {
+export function ThreadDialog({ children, thread, onCreate, onUpdate }: ThreadDialogProps) {
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState<Thread>(
     thread || {
       id: "",
       color: "",
       type: "",
+      unit: "",
+      price: 0,
+      qty: 0
     },
   )
 
@@ -35,9 +42,9 @@ export function ThreadDialog({ children, thread, onCreate,onUpdate }: ThreadDial
     e.preventDefault()
     setOpen(false)
     if (thread) {
-      onUpdate(formData.id,formData.type,formData.color)
-    }else{
-      onCreate(formData.type,formData.color)
+      onUpdate(formData.id, formData.type, formData.color, formData.unit, formData.price, formData.qty)
+    } else {
+      onCreate(formData.type, formData.color, formData.unit, formData.price, formData.qty)
     }
   }
 
@@ -64,6 +71,32 @@ export function ThreadDialog({ children, thread, onCreate,onUpdate }: ThreadDial
               id="type"
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="qty">Еденица измерения</Label>
+            <SelectUnit
+              value={formData.unit}
+              onValueChange={(value) => setFormData({ ...formData, unit: value })} />
+          </div>
+          <div>
+            <Label htmlFor="price">Цена</Label>
+            <Input
+              id="price"
+              type="number"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: Number.parseInt(e.target.value) || 0 })}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="qty">Количество</Label>
+            <Input
+              id="qty"
+              type="number"
+              value={formData.qty}
+              onChange={(e) => setFormData({ ...formData, qty: Number.parseInt(e.target.value) || 0 })}
               required
             />
           </div>

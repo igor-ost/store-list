@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Package, Hash, Palette, Ruler, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, User, Package, Hash, Palette, Ruler } from "lucide-react"
 import { useEffect, useState } from "react"
 import { OrderInfo } from "@/@types/orders-types"
 import { Api } from "@/service/api-clients"

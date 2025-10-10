@@ -1,17 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { FabricDialog } from "./fabric-dialog"
 import { toast } from "sonner"
 import { Api } from "@/service/api-clients"
+import { ReferenceSkeleton } from "@/components/loading/reference"
 
 type Fabric = {
   id: string
@@ -23,44 +23,30 @@ type Fabric = {
   qty: number
 }
 
+type Props = {
+  fabrics: Fabric[]
+  loading: boolean
+  setFabrics: React.Dispatch<SetStateAction<Fabric[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
 
-export default function FabricsReferences() {
-  const [fabrics, setFabrics] = useState<Fabric[]>([])
+
+export default function FabricsReferences({fabrics,setFabrics,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const [loading, setLoading] = useState(false)
-
-  const fetchFabrics = async () => {
-    try {
-      const response = await Api.fabrics.getList()
-      if (response) {
-        setFabrics(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-      fetchFabrics()
-  }, [])
-
-
-  const handleCreate = async (type:string,name:string,color:string,unit:string,price:number,qty:number) => {
+  const handleCreate = async (type: string, name: string, color: string, unit: string, price: number, qty: number) => {
     try {
       const data = {
-        type:type,
-        name:name,
-        color:color,
-        unit:unit,
-        price:price,
-        qty:qty
+        type: type,
+        name: name,
+        color: color,
+        unit: unit,
+        price: price,
+        qty: qty
       }
       setLoading(true)
       const response = await Api.fabrics.create(data)
-      if(response){
+      if (response) {
         setFabrics((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Ткань ${data.name}-${data.type}, создана`)
@@ -74,18 +60,18 @@ export default function FabricsReferences() {
 
 
 
-  const handleUpdate = async (id:string,type:string,name:string,color:string,unit:string,price:number,qty:number) => {
-    if(id){
+  const handleUpdate = async (id: string, type: string, name: string, color: string, unit: string, price: number, qty: number) => {
+    if (id) {
       const data = {
-        id:id,
-        type:type,
-        name:name,
-        color:color,
-        unit:unit,
-        price:price,
-        qty:qty
+        id: id,
+        type: type,
+        name: name,
+        color: color,
+        unit: unit,
+        price: price,
+        qty: qty
       }
-       try {
+      try {
         const response = await Api.fabrics.update(data)
         if (response) {
           setFabrics((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -122,6 +108,10 @@ export default function FabricsReferences() {
       fabric.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       fabric.color?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,7 +162,6 @@ export default function FabricsReferences() {
                     <TableHead className="w-[20%]">Название</TableHead>
                     <TableHead className="w-[15%]">Тип</TableHead>
                     <TableHead className="w-[15%]">Цвет</TableHead>
-                    <TableHead className="w-[10%]">Ед. изм.</TableHead>
                     <TableHead className="w-[15%]">Цена</TableHead>
                     <TableHead className="w-[10%]">Кол-во</TableHead>
                     <TableHead className="w-[15%] text-right">Действия</TableHead>
@@ -186,16 +175,11 @@ export default function FabricsReferences() {
                         <Badge variant="secondary">{fabric.type}</Badge>
                       </TableCell>
                       <TableCell>{fabric.color || "-"}</TableCell>
-                      <TableCell>{fabric.unit}</TableCell>
-                      <TableCell>{fabric.price ? `${fabric.price} ₸` : "-"}</TableCell>
                       <TableCell>
-                        {fabric.qty ? (
-                          <Badge variant={fabric.qty < 30 ? "destructive" : "default"}>
-                            {fabric.qty} {fabric.unit}
-                          </Badge>
-                        ) : (
-                          "-"
-                        )}
+                        <Badge variant="outline">{fabric.price ? `${fabric.price} ₸` : "-"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={fabric.qty < 50 ? "destructive" : "default"}>{fabric.qty} {fabric.unit}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

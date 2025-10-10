@@ -7,10 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
 import { Plus, Edit } from "lucide-react"
-import { GetListSuccessResponse } from "@/@types/customer-types"
-import { Api } from "@/service/api-clients"
 
 type Customer = {
   id: string
@@ -28,7 +25,6 @@ interface CustomerDialogProps {
 
 export function CustomerDialog({ customer, onCreate, onUpdate,children }: CustomerDialogProps) {
     const [open, setOpen] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
     const [formData, setFormData] = useState<Customer>(
         customer || {
         id: "",
@@ -85,11 +81,11 @@ export function CustomerDialog({ customer, onCreate, onUpdate,children }: Custom
                         <div className="text-xs text-muted-foreground">БИН должен содержать 12 цифр</div>
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             Отмена
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading ? "Сохранение..." : customer ? "Обновить" : "Создать"}
+                        <Button type="submit" >
+                            { customer ? "Обновить" : "Создать"}
                         </Button>
                     </div>
                 </form>

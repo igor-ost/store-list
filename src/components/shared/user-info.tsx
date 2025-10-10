@@ -19,11 +19,12 @@ export function UserInfo({variant = "default"}:{variant?: "default" | "text"}) {
           setSession(response)
         }
       } catch (error) {
+        console.log(error)
         router.push("/");
       }
     };
     handleVerify();
-  }, [router]);
+  }, [router,setSession]);
 
 
 

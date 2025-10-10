@@ -1,4 +1,4 @@
-import { LoginErrorResponse, LoginRequest, LoginResponse, LoginSuccessResponse, VerifyErrorResponse, VerifySuccessResponse } from "@/@types/auth-types";
+import { LoginErrorResponse, LoginRequest, LoginSuccessResponse, VerifyErrorResponse, VerifySuccessResponse } from "@/@types/auth-types";
 import { axiosInstance } from "../instance";
 import ApiRouter from "../constants";
 import { AxiosError } from "axios";

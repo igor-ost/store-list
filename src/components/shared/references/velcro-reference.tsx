@@ -1,54 +1,48 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { VelcroDialog } from "./velcro-dialog"
 import { toast } from "sonner"
 import { Api } from "@/service/api-clients"
+import { ReferenceSkeleton } from "@/components/loading/reference"
+import { Badge } from "@/components/ui/badge"
 
 type Velcro = {
   id: string
   name: string
+  unit: string
+  price: number
+  qty: number
 }
 
-export default function VelcroReferences() {
-  const [velcro, setVelcro] = useState<Velcro[]>([])
+type Props = {
+  velcro: Velcro[]
+  loading: boolean
+  setVelcro: React.Dispatch<SetStateAction<Velcro[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
+
+export default function VelcroReferences({velcro,setVelcro,loading,setLoading} : Props) {
+
   const [searchTerm, setSearchTerm] = useState("")
 
-  const [loading, setLoading] = useState(false)
-
-  const fetchVelcro = async () => {
-    try {
-      const response = await Api.velcro.getList()
-      if (response) {
-        setVelcro(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-      fetchVelcro()
-  }, [])
-
-
-  const handleCreate = async (name:string) => {
+  const handleCreate = async (name: string,unit:string,price:number, qty: number) => {
     try {
       const data = {
-        name:name,
+        name: name,
+        unit:unit,
+        price:price,
+        qty: qty
       }
       setLoading(true)
       const response = await Api.velcro.create(data)
-      if(response){
+      if (response) {
         setVelcro((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Велькро ${data.name}, создана`)
@@ -62,13 +56,16 @@ export default function VelcroReferences() {
 
 
 
-  const handleUpdate = async (id:string,name:string) => {
-    if(id){
+  const handleUpdate = async (id: string, name: string,unit:string,price:number, qty: number) => {
+    if (id) {
       const data = {
-        id:id,
-        name:name
+        id: id,
+        name: name,
+        unit:unit,
+        price:price,
+        qty: qty
       }
-       try {
+      try {
         const response = await Api.velcro.update(data)
         if (response) {
           setVelcro((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -101,6 +98,10 @@ export default function VelcroReferences() {
 
   const filteredVelcro = velcro.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
@@ -112,7 +113,7 @@ export default function VelcroReferences() {
             <VelcroDialog onUpdate={handleUpdate} onCreate={handleCreate}>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Добавить липучку
+                Добавить Велькро
               </Button>
             </VelcroDialog>
           </div>
@@ -134,9 +135,9 @@ export default function VelcroReferences() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">{searchTerm ? "Липучки не найдены" : "Нет липучек"}</h3>
+                <h3 className="text-lg font-semibold mb-2">{searchTerm ? "Велькро не найдены" : "Нет Велькро"}</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm ? "Попробуйте изменить критерии поиска" : "Добавьте первую липучку для начала работы"}
+                  {searchTerm ? "Попробуйте изменить критерии поиска" : "Добавьте первую Велькро для начала работы"}
                 </p>
               </div>
             </CardContent>
@@ -148,6 +149,8 @@ export default function VelcroReferences() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[80%]">Название</TableHead>
+                    <TableHead className="w-[20%]">Цена</TableHead>
+                    <TableHead className="w-[20%]">Количество</TableHead>
                     <TableHead className="w-[20%] text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -155,6 +158,12 @@ export default function VelcroReferences() {
                   {filteredVelcro.map((item) => (
                     <TableRow key={item.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{item.price ? `${item.price} ₸` : "-"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={item.qty < 50 ? "destructive" : "default"}>{item.qty} {item.unit}</Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <VelcroDialog velcro={item} onUpdate={handleUpdate} onCreate={handleCreate}>
@@ -165,7 +174,7 @@ export default function VelcroReferences() {
 
                           <DeleteDialog
                             id={item.id}
-                            title="Удалить липучку"
+                            title="Удалить Велькро"
                             onConfirm={() => handleDelete(item.id)}
                             itemName={item.name}
                           >

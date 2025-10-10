@@ -7,18 +7,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SelectUnit } from "../select-unit"
 
 type Accessory = {
   id: string
   name: string
+  unit:string
+  price:number
   qty: number
 }
 
 type AccessoryDialogProps = {
   children: ReactNode
   accessory?: Accessory
-  onCreate: (name:string,qty:number) => void
-  onUpdate: (id:string,name:string,qty:number) => void
+  onCreate: (name:string,unit:string,price:number,qty: number) => void
+  onUpdate: (id:string,name:string,unit:string,price:number,qty: number) => void
 }
 
 export function AccessoryDialog({ children, accessory, onCreate,onUpdate }: AccessoryDialogProps) {
@@ -27,6 +30,8 @@ export function AccessoryDialog({ children, accessory, onCreate,onUpdate }: Acce
     accessory || {
       id: "",
       name: "",
+      unit: "",
+      price: 0,
       qty: 0,
     },
   )
@@ -35,9 +40,9 @@ export function AccessoryDialog({ children, accessory, onCreate,onUpdate }: Acce
     e.preventDefault()
     setOpen(false)
     if (accessory) {
-      onUpdate(formData.id,formData.name,formData.qty)
+      onUpdate(formData.id,formData.name,formData.unit,formData.price,formData.qty)
     }else{
-      onCreate(formData.name,formData.qty)
+      onCreate(formData.name,formData.unit,formData.price,formData.qty)
     }
   }
 
@@ -55,6 +60,22 @@ export function AccessoryDialog({ children, accessory, onCreate,onUpdate }: Acce
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="qty">Еденица измерения</Label>
+            <SelectUnit
+              value={formData.unit}
+              onValueChange={(value) => setFormData({ ...formData, unit: value })}/>
+          </div>
+          <div>
+            <Label htmlFor="price">Цена</Label>
+            <Input
+              id="price"
+              type="number"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: Number.parseInt(e.target.value) || 0 })}
               required
             />
           </div>

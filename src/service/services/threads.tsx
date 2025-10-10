@@ -24,7 +24,7 @@ export const getList = async (): Promise<GetListSuccessResponse[]> => {
     }   
 }
 
-export const create = async (request: {type:string,color:string}): Promise<createSuccessResponse> => {
+export const create = async (request: {type:string,color:string;unit:string;price:number;qty: number}): Promise<createSuccessResponse> => {
     try {
         const { data } = await axiosInstance.post(ApiRouter.THREADS_CREATE,request);
         return data as createSuccessResponse;
@@ -64,7 +64,7 @@ export const removeById = async (id:string): Promise<RemoveSuccessResponse> => {
     }   
 }
 
-export const update = async (req: {id:string,type:string,color:string}): Promise<RemoveSuccessResponse> => {
+export const update = async (req: {id:string,type:string,color:string;unit:string;price:number;qty: number}): Promise<RemoveSuccessResponse> => {
     try {
         const { data } = await axiosInstance.put(ApiRouter.THREADS_UPDATE + req.id,req);
         return data as RemoveSuccessResponse;

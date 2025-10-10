@@ -1,60 +1,50 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SetStateAction, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Link from "next/link"
 import { DeleteDialog } from "../delete-dialog"
 import { ButtonDialog } from "./button-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
+import { ReferenceSkeleton } from "@/components/loading/reference"
 
 type ButtonItem = {
   id: string
   color: string
   type: string
+  unit: string
+  price: number
   qty: number
 }
 
+type Props = {
+  buttons: ButtonItem[]
+  loading: boolean
+  setButtons: React.Dispatch<SetStateAction<ButtonItem[]>>;
+  setLoading: React.Dispatch<SetStateAction<boolean>>;
+}
 
 
-export default function ButtonsReferences() {
-  const [buttons, setButtons] = useState<ButtonItem[]>([])
+export default function ButtonsReferences({buttons,setButtons,loading,setLoading} : Props) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(false)
 
-  const fetchButtons = async () => {
-    try {
-      const response = await Api.buttons.getList()
-      if (response) {
-        setButtons(response)
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке:", error)
-      toast.error(`${error}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => {
-      fetchButtons()
-  }, [])
-
-
-  const handleCreate = async (color:string,type:string,qty:number) => {
+  const handleCreate = async (color: string, type: string,unit:string,price:number, qty: number) => {
     try {
       const data = {
-        color:color,
-        type:type,
-        qty:qty
+        color: color,
+        type: type,
+        unit:unit,
+        price:price,
+        qty: qty
       }
       setLoading(true)
       const response = await Api.buttons.create(data)
-      if(response){
+      if (response) {
         setButtons((prev) => [...prev, { ...data, id: Date.now().toString() }])
       }
       toast.success(`Кнопка ${data.color}-${data.type}, создана`)
@@ -67,15 +57,17 @@ export default function ButtonsReferences() {
 
 
 
-  const handleUpdate = async (id:string,color:string,type:string,qty:number) => {
-    if(id){
+  const handleUpdate = async (id: string, color: string, type: string, unit:string,price:number, qty: number) => {
+    if (id) {
       const data = {
-        id:id,
-        color:color,
-        type:type,
-        qty:qty
+        id: id,
+        color: color,
+        type: type,
+        unit:unit,
+        price:price,
+        qty: qty
       }
-       try {
+      try {
         const response = await Api.buttons.update(data)
         if (response) {
           setButtons((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -112,6 +104,10 @@ export default function ButtonsReferences() {
       button.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
       button.type.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  if (loading) {
+    return <ReferenceSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,6 +157,7 @@ export default function ButtonsReferences() {
                   <TableRow>
                     <TableHead className="w-[30%]">Цвет</TableHead>
                     <TableHead className="w-[30%]">Тип</TableHead>
+                    <TableHead className="w-[20%]">Цена</TableHead>
                     <TableHead className="w-[20%]">Количество</TableHead>
                     <TableHead className="w-[20%] text-right">Действия</TableHead>
                   </TableRow>
@@ -173,7 +170,10 @@ export default function ButtonsReferences() {
                         <Badge variant="secondary">{button.type}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={button.qty < 100 ? "destructive" : "default"}>{button.qty} шт.</Badge>
+                        <Badge variant="outline">{button.price ? `${button.price} ₸` : "-"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={button.qty < 50 ? "destructive" : "default"}>{button.qty} {button.unit}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
