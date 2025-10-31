@@ -196,13 +196,11 @@ export function ImageViewer({ images, initialIndex, onClose }: ImageViewerProps)
           }}
         >
           <div className="relative w-[80vw] h-[80vh]">
-            <Image
+            <img
               src={ "http://9140475.kz" +  images[currentIndex] || "/placeholder.svg"}
               alt={`Фото ${currentIndex + 1}`}
-              fill
               className="object-contain select-none"
               draggable={false}
-              priority
             />
           </div>
         </div>
@@ -243,7 +241,7 @@ export function ImageViewer({ images, initialIndex, onClose }: ImageViewerProps)
                   index === currentIndex ? "border-white scale-110" : "border-white/30 hover:border-white/60"
                 }`}
               >
-                <Image src={ "http://9140475.kz" + url || "/placeholder.svg"} alt={`Миниатюра ${index + 1}`} fill className="object-cover" />
+                <img src={ "http://9140475.kz" + url || "/placeholder.svg"} alt={`Миниатюра ${index + 1}`} className="object-cover" />
               </button>
             ))}
           </div>

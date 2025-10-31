@@ -103,7 +103,7 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
               className="relative group aspect-square rounded-lg overflow-hidden border border-slate-200"
             >
               <button type="button" onClick={() => setViewerIndex(index)} className="w-full h-full cursor-zoom-in">
-                <Image src={ "http://9140475.kz" + url || "/placeholder.svg"} alt={`Фото ${index + 1}`} fill className="object-cover" />
+                <img src={ "http://9140475.kz" + url || "/placeholder.svg"} alt={`Фото ${index + 1}`} className="object-cover" />
               </button>
               <button
                 type="button"
