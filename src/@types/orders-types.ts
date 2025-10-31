@@ -2,8 +2,6 @@ import { CustomerGeneral } from "./customer-types";
 
 export type CreateOrderRequest = {
     general: General,
-    zippers: Zippers[],
-    fabrics: Fabrics[]
     user_id? :string;
 }
 

@@ -8,6 +8,8 @@ import * as buttons from '@/service/services/buttons'
 import * as zippers from '@/service/services/zippers'
 import * as threads from '@/service/services/threads'
 import * as velcro from '@/service/services/velcro'
+import * as products from '@/service/services/products'
+import * as materials from '@/service/services/materials'
 export const Api = {
     auth,
     orders,
@@ -19,4 +21,6 @@ export const Api = {
     zippers,
     threads,
     velcro,
+    products,
+    materials
 };

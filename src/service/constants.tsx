@@ -48,6 +48,13 @@ const ApiRouter = {
     VELCRO_REMOVE_BY_ID: "velcro/",
     VELCRO_UPDATE: "velcro/",
 
+    
+    PRODUCTS_GET_LIST: "products/",
+    PRODUCTS_CREATE: "products/",
+    PRODUCTS_REMOVE_BY_ID: "products/",
+    PRODUCTS_UPDATE: "products/",
+    PRODUCTS_GET_BY_ID: "products/",
 
+    MATERIALS_GET_LIST: "materials/"
 }
 export default ApiRouter;

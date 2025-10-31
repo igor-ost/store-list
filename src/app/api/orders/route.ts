@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         notes: general.notes,
         user_id: user_id,
         image_urls: general.image_urls,
+        product_id: general.product_id
       }
       },
     );

@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Minus } from "lucide-react"
 import { Api } from "@/service/api-clients"
 import { authStore } from "@/store/auth-store"
 import { toast } from "sonner"
@@ -22,11 +21,17 @@ import type { CustomerGeneral } from "@/@types/customer-types"
 import { CustomerSelect } from "./references/customer-select"
 import { ImageUpload } from "./image-upload"
 import { Skeleton } from "../ui/skeleton"
+import { ProductSelect, type ProductsGeneral } from "./references/product-select"
+import { OrderMaterialSection } from "./order-material-section"
+import { ProductMaterialDialog } from "./references/product-material-dialog"
+import { Materials } from "@/app/reference-books/page"
+import { Accessories, Buttons, Fabrics, Threads, Velcro, Zipperz } from "@/@types/product-types"
 
 interface OrderFormData {
   order_number: string
   order_date: string
   customer_id: string
+  product_id: string
   product_name: string
   product_type: string
   size: string
@@ -34,7 +39,27 @@ interface OrderFormData {
   description: string
   status: string
   notes: string
+  materials: LoadedProductMaterials | null
   image_urls: string[]
+}
+
+interface LoadedMaterial {
+  id: string
+  qty: number
+  name?: string
+  color?: string
+  type?: string
+  unit?: string
+  price?: number
+}
+
+interface LoadedProductMaterials {
+  zippers: LoadedMaterial[]
+  threads: LoadedMaterial[]
+  buttons: LoadedMaterial[]
+  fabrics: LoadedMaterial[]
+  accessories: LoadedMaterial[]
+  velcro: LoadedMaterial[]
 }
 
 export function OrderForm() {
@@ -42,13 +67,23 @@ export function OrderForm() {
   const [isLoading, setIsLoading] = useState(false)
 
   const [customerLoading, setCustomerLoading] = useState(false)
-
+  const [productsLoading, setProductsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { session } = authStore()
+  
+  const [materials,setMaterials] = useState<Materials>({
+    zippers: [],
+    threads: [],
+    fabrics: [],
+    buttons: [],
+    velcro: [],
+    accessories: []
+  })
 
   const [formData, setFormData] = useState<OrderFormData>({
     order_number: `ORD-${Date.now()}`,
     order_date: new Date().toISOString().split("T")[0],
+    product_id: "",
     customer_id: "",
     product_name: "",
     product_type: "summer",
@@ -57,36 +92,36 @@ export function OrderForm() {
     description: "",
     status: "pending",
     notes: "",
+    materials: materials,
     image_urls: [],
   })
 
-  const [fabrics, setFabrics] = useState([{ name: "", color: "", consumption: "" }])
-  const [zippers, setZippers] = useState([{ type: "", color: "", quantity: "" }])
   const [assignedWorkers, setAssignedWorkers] = useState<string[]>([])
 
-  const toggleWorker = (workerId: string) => {
-    setAssignedWorkers((prev) => (prev.includes(workerId) ? prev.filter((id) => id !== workerId) : [...prev, workerId]))
-  }
+  const [productMaterials, setProductMaterials] = useState<LoadedProductMaterials | null>(null)
+  const [materialsLoading, setMaterialsLoading] = useState(false)
 
   const [workers, setWorkers] = useState<WorkersGeneral[]>()
   const [customers, setCustomers] = useState<CustomerGeneral[]>()
+  const [products, setProducts] = useState<ProductsGeneral[]>()
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-
+    console.log(productMaterials)
     try {
       if (session?.id) {
+
         const data_request = {
           general: formData,
-          zippers: zippers,
-          fabrics: fabrics,
+          materials: productMaterials,
           user_id: session?.id,
         }
         const response = await Api.orders.create(data_request)
         if (response) {
-          router.push("/orders")
+          // router.push("/orders")
         }
       }
     } catch (error) {
@@ -96,20 +131,12 @@ export function OrderForm() {
     }
   }
 
-  const addFabric = () => {
-    setFabrics([...fabrics, { name: "", color: "", consumption: "" }])
-  }
-
-  const removeFabric = (index: number) => {
-    setFabrics(fabrics.filter((_, i) => i !== index))
-  }
-
-  const addZipper = () => {
-    setZippers([...zippers, { type: "", color: "", quantity: "" }])
-  }
-
-  const removeZipper = (index: number) => {
-    setZippers(zippers.filter((_, i) => i !== index))
+  const toggleWorker = (workerId: string) => {
+    if (assignedWorkers.includes(workerId)) {
+      setAssignedWorkers(assignedWorkers.filter((id) => id !== workerId))
+    } else {
+      setAssignedWorkers([...assignedWorkers, workerId])
+    }
   }
 
   useEffect(() => {
@@ -132,7 +159,158 @@ export function OrderForm() {
     handleGetOrders()
   }, [])
 
+  useEffect(() => {
+    const handleGetProducts = async () => {
+      try {
+        setProductsLoading(true)
+        const response = await Api.products.getList()
+        if (response) {
+          setProducts(response)
+        }
+      } catch (error) {
+        console.log(error)
+        toast.error(`Не удалось загрузить заказы: ${error}`)
+      } finally {
+        setProductsLoading(false)
+      }
+    }
+    handleGetProducts()
+  }, [])
 
+
+  useEffect(() => {
+    const handleGetMaterials = async () => {
+      try {
+        const response = await Api.materials.getList()
+        if (response) {
+          setMaterials(response)
+        }
+      } catch (error) {
+        console.log(error)
+        toast.error(`Не удалось загрузить заказы: ${error}`)
+      } finally {
+      }
+    }
+    handleGetMaterials()
+  }, [])
+
+  useEffect(() => {
+    const loadProductMaterials = async () => {
+      if (!formData.product_id) {
+        setProductMaterials(null)
+        return
+      }
+
+      try {
+        setMaterialsLoading(true)
+        const response = await Api.products.getById(formData.product_id)
+        setFormData({ ...formData, product_name: response.name, description: response.description })
+        const materials: LoadedProductMaterials = {
+          zippers:
+            response.zippers?.map((item: Zipperz) => ({
+              id: item.zipper.id,
+              qty: item.qty,
+              color: item.zipper.color,
+              type: item.zipper.type,
+              unit: item.zipper.unit,
+              price: item.zipper.price,
+            })) || [],
+          threads:
+            response.threads?.map((item: Threads) => ({
+              id: item.thread.id,
+              qty: item.qty,
+              color: item.thread.color,
+              type: item.thread.type,
+              unit: item.thread.unit,
+              price: item.thread.price,
+            })) || [],
+          buttons:
+            response.buttons?.map((item: Buttons) => ({
+              id: item.button.id,
+              qty: item.qty,
+              color: item.button.color,
+              type: item.button.type,
+              unit: item.button.unit,
+              price: item.button.price,
+            })) || [],
+          fabrics:
+            response.fabrics?.map((item: Fabrics) => ({
+              id: item.fabric.id,
+              qty: item.qty,
+              name: item.fabric.name,
+              color: item.fabric.color,
+              type: item.fabric.type,
+              unit: item.fabric.unit,
+              price: item.fabric.price,
+            })) || [],
+          accessories:
+            response.accessories?.map((item: Accessories) => ({
+              id: item.accessory.id,
+              qty: item.qty,
+              name: item.accessory.name,
+              unit: item.accessory.unit,
+              price: item.accessory.price,
+            })) || [],
+          velcro:
+            response.velcro?.map((item: Velcro) => ({
+              id: item.velcro.id,
+              qty: item.qty,
+              name: item.velcro.name,
+              unit: item.velcro.unit,
+              price: item.velcro.price,
+            })) || [],
+        }
+        setProductMaterials(materials)
+      } catch (error) {
+        console.error(error)
+        toast.error(`Не удалось загрузить материалы: ${error}`)
+      } finally {
+        setMaterialsLoading(false)
+      }
+    }
+    loadProductMaterials()
+  }, [formData.product_id])
+
+  const handleMaterialChange = (materialType: keyof LoadedProductMaterials, materialId: string, newQty: number) => {
+    if (!productMaterials) return
+
+    setProductMaterials({
+      ...productMaterials,
+      [materialType]: productMaterials[materialType].map((material) =>
+        material.id === materialId ? { ...material, qty: newQty } : material,
+      ),
+    })
+  }
+
+
+
+  const handleMaterialDelete = (materialType: keyof LoadedProductMaterials, materialId: string) => {
+    if (!productMaterials) return
+
+    setProductMaterials({
+      ...productMaterials,
+      [materialType]: productMaterials[materialType].filter((material) => material.id !== materialId),
+    })
+  }
+
+  const handleMaterialAdd = (
+    id: string,
+    qty: number,
+    materialType: keyof LoadedProductMaterials,
+  ) => {
+    if (!productMaterials) return
+
+    const foundMaterial = materials[materialType].find(i => i.id === id)
+    if (!foundMaterial) return
+
+    const newMaterial = { ...foundMaterial, qty }
+  
+    setProductMaterials({
+      ...productMaterials,
+      [materialType]: [...productMaterials[materialType], newMaterial],
+    })
+
+  }
 
   const filteredWorkers = workers?.filter((item) => item.role != "admin" && item.role != "manager")
 
@@ -183,46 +361,44 @@ export function OrderForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {customerLoading ? 
+                {customerLoading ? (
                   <div>
                     <Label htmlFor="customer_name">Заказчик</Label>
-                    <Skeleton className="w-full h-8"/>
+                    <Skeleton className="w-full h-8" />
                   </div>
-                :
+                ) : (
+                  <div>
+                    <Label htmlFor="customer_name">Заказчик</Label>
+                    {customers && (
+                      <CustomerSelect
+                        customers={customers}
+                        value={formData.customer_id}
+                        onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
+                        placeholder="Выберите заказчика..."
+                      />
+                    )}
+                  </div>
+                )}
 
-                <div>
-                  <Label htmlFor="customer_name">Заказчик</Label>
-                  {customers && (
-                    <CustomerSelect
-                      customers={customers}
-                      value={formData.customer_id}
-                      onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
-                      placeholder="Выберите заказчика..."
-                    />
-                  )}
-                </div>
-
-                }
-                <div>
-                  <Label htmlFor="product_type">Тип изделия</Label>
-                  <Select
-                    value={formData.product_type}
-                    onValueChange={(value) => setFormData({ ...formData, product_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="summer">Летние</SelectItem>
-                      <SelectItem value="insulated">Утепленные</SelectItem>
-                      <SelectItem value="tent">Полога</SelectItem>
-                      <SelectItem value="bags">Мешки</SelectItem>
-                      <SelectItem value="other">Прочее</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {productsLoading ? (
+                  <div>
+                    <Label htmlFor="product_name">Изделие</Label>
+                    <Skeleton className="w-full h-8" />
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="product_name">Изделие</Label>
+                    {products && (
+                      <ProductSelect
+                        products={products}
+                        value={formData.product_id}
+                        onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                        placeholder="Выберите изделие..."
+                      />
+                    )}
+                  </div>
+                )}
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="product_name">Наименование изделия</Label>
@@ -298,135 +474,72 @@ export function OrderForm() {
         <TabsContent value="materials" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Ткани</CardTitle>
+              <CardTitle>Материалы изделия</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {fabrics.map((fabric, index) => (
-                <div key={index} className="flex gap-4 items-end">
-                  <div className="flex-1">
-                    <Label>Наименование ткани</Label>
-                    <Input
-                      placeholder="Название ткани"
-                      value={fabric.name}
-                      onChange={(e) => {
-                        const newFabrics = [...fabrics]
-                        newFabrics[index].name = e.target.value
-                        setFabrics(newFabrics)
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label>Цвет</Label>
-                    <Input
-                      placeholder="Цвет"
-                      value={fabric.color}
-                      onChange={(e) => {
-                        const newFabrics = [...fabrics]
-                        newFabrics[index].color = e.target.value
-                        setFabrics(newFabrics)
-                      }}
-                    />
-                  </div>
-                  <div className="w-32">
-                    <Label>Расход (м)</Label>
-                    <Input
-                      placeholder="Расход"
-                      value={fabric.consumption}
-                      onChange={(e) => {
-                        const newFabrics = [...fabrics]
-                        newFabrics[index].consumption = e.target.value
-                        setFabrics(newFabrics)
-                      }}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeFabric(index)}
-                    disabled={fabrics.length === 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
+            <CardContent>
+              {materialsLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
                 </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addFabric}>
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить ткань
-              </Button>
-            </CardContent>
-          </Card>
+              ) : !productMaterials ? (
+                <div className="text-center text-slate-500 py-8">Выберите изделие, чтобы увидеть список материалов</div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Если вы хотите добавить ещё один материал, нажмите кнопку «Добавить».
+                    </p>
+                    <ProductMaterialDialog handleAdd={handleMaterialAdd} materials={materials}>
+                      <Button>Добавить</Button>
+                    </ProductMaterialDialog>
+                  </div>
+                                                      
+                  <OrderMaterialSection
+                    title="Молнии"
+                    materials={productMaterials.zippers}
+                    onMaterialChange={(id, qty) => handleMaterialChange("zippers", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("zippers", id)}
+                  />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Молнии</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {zippers.map((zipper, index) => (
-                <div key={index} className="flex gap-4 items-end">
-                  <div className="flex-1">
-                    <Label>Тип молнии</Label>
-                    <Input
-                      placeholder="Тип молнии"
-                      value={zipper.type}
-                      onChange={(e) => {
-                        const newZippers = [...zippers]
-                        newZippers[index].type = e.target.value
-                        setZippers(newZippers)
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label>Цвет</Label>
-                    <Select
-                      value={zipper.color}
-                      onValueChange={(value) => {
-                        const newZippers = [...zippers]
-                        newZippers[index].color = value
-                        setZippers(newZippers)
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите цвет" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="black">Черный</SelectItem>
-                        <SelectItem value="khaki">Хаки</SelectItem>
-                        <SelectItem value="gray">Серый</SelectItem>
-                        <SelectItem value="red">Красный</SelectItem>
-                        <SelectItem value="dark_blue">Темно-синий</SelectItem>
-                        <SelectItem value="blue">Синий</SelectItem>
-                        <SelectItem value="green">Зеленый</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="w-32">
-                    <Label>Количество</Label>
-                    <Input
-                      placeholder="Кол-во"
-                      value={zipper.quantity}
-                      onChange={(e) => {
-                        const newZippers = [...zippers]
-                        newZippers[index].quantity = e.target.value
-                        setZippers(newZippers)
-                      }}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeZipper(index)}
-                    disabled={zippers.length === 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
+                  <OrderMaterialSection
+                    title="Нитки"
+                    materials={productMaterials.threads}
+                    onMaterialChange={(id, qty) => handleMaterialChange("threads", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("threads", id)}
+
+                  />
+
+                  <OrderMaterialSection
+                    title="Пуговицы"
+                    materials={productMaterials.buttons}
+                    onMaterialChange={(id, qty) => handleMaterialChange("buttons", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("buttons", id)}
+                  />
+
+                  <OrderMaterialSection
+                    title="Ткани"
+                    materials={productMaterials.fabrics}
+                    onMaterialChange={(id, qty) => handleMaterialChange("fabrics", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("fabrics", id)}
+                  />
+
+                  <OrderMaterialSection
+                    title="Фурнитура"
+                    materials={productMaterials.accessories}
+                    onMaterialChange={(id, qty) => handleMaterialChange("accessories", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("accessories", id)}
+                  />
+
+                  <OrderMaterialSection
+                    title="Липучки"
+                    materials={productMaterials.velcro}
+                    onMaterialChange={(id, qty) => handleMaterialChange("velcro", id, qty)}
+                    onMaterialDelete={(id) => handleMaterialDelete("velcro", id)}
+                  />
                 </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addZipper}>
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить молнию
-              </Button>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
