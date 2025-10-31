@@ -89,10 +89,9 @@ export function OrderDetails({ id }: OrderDetailsProps) {
                   onClick={() => setViewerIndex(index)}
                   className="relative aspect-square rounded-lg overflow-hidden border border-border hover:border-foreground/20 transition-all group bg-muted/20"
                 >
-                  <Image
+                  <img
                     src={url || "/placeholder.svg"}
                     alt={`Изображение ${index + 1}`}
-                    fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
