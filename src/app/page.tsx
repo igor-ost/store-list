@@ -38,6 +38,7 @@ export default function Login() {
         expires.setDate(expires.getDate() + 14)
 
         document.cookie = `token=${token}; expires=${expires.toUTCString()}; path=/; secure; SameSite=Lax`
+        console.log(`token=${token}; expires=${expires.toUTCString()}; path=/; secure; SameSite=Lax`)
         toast.success(`Авторазиция прошла успешно!`)
         router.push("/dashboard")
       }

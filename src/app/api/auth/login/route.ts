@@ -43,15 +43,6 @@ export async function POST(request: Request) {
       token, 
     });
 
-
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 7 * 24 * 60 * 60, 
-      path: "/",
-      sameSite: "lax",
-    });
-
     return response;
   } catch (error) {
     console.error("Login error:", error);
