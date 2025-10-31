@@ -30,10 +30,10 @@ export default async function DashboardPage() {
                 <div className="text-sm text-slate-600">Создать новый заказ</div>
               </a>
               <a
-                href="/materials"
+                href="/reference-books"
                 className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                <div className="font-medium">Управление материалами</div>
+                <div className="font-medium">Управление справочником</div>
                 <div className="text-sm text-slate-600">Просмотр и управление складом</div>
               </a>
               <a href="/workers" className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">

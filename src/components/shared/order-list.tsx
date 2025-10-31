@@ -230,11 +230,11 @@ export function OrdersList({ orders }: OrdersListProps) {
                                                 <Eye className="h-3 w-3" />
                                             </Button>
                                         </Link>
-                                        <Link href={`/orders/edit/${order.id}`}>
+                                        {/* <Link href={`/orders/edit/${order.id}`}>
                                             <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-transparent cursor-pointer">
                                                 <Edit className="h-3 w-3" />
                                             </Button>
-                                        </Link>
+                                        </Link> */}
                                         <DeleteDialog id={order.id} title="Удалить заказ" onConfirm={()=>handleRemove(order.id)} itemName={order.order_number}>
                                             <Button
                                                 variant="outline"

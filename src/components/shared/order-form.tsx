@@ -120,8 +120,8 @@ export function OrderForm() {
           user_id: session?.id,
         }
         const response = await Api.orders.create(data_request)
-        if (response) {
-          // router.push("/orders")
+        if (response.id) {
+          router.push("/orders")
         }
       }
     } catch (error) {

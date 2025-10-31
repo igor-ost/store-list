@@ -24,6 +24,7 @@ model orders {
   customer_id   String
   product_id    String
   product_name  String
+  description   String
   quantity      Int       @default(1)
   status        String    @default("pending")
   notes         String?
@@ -32,6 +33,13 @@ model orders {
   updated_at    DateTime  @default(now())
   image_urls    String[]
   customer      customer  @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  orderZippers     OrderZipper[]
+  orderThreads     OrderThread[]
+  orderButtons     OrderButton[]
+  orderFabrics     OrderFabric[]
+  orderAccessories OrderAccessory[]
+  orderVelcro      OrderVelcro[]
 
   @@map("orders")
 }
@@ -56,6 +64,7 @@ model zippers {
   qty   Int
   
   orderTemplates OrderTemplateZipper[]
+  orders         OrderZipper[]         @relation("ZipperToOrder")
 }
 
 model threads {
@@ -67,6 +76,7 @@ model threads {
   qty   Int
   
   orderTemplates OrderTemplateThread[]
+  orders         OrderThread[]         @relation("ThreadToOrder")
 }
 
 model buttons {
@@ -78,6 +88,7 @@ model buttons {
   qty   Int
   
   orderTemplates OrderTemplateButton[]
+  orders         OrderButton[]         @relation("ButtonToOrder")
 }
 
 model fabrics {
@@ -90,6 +101,7 @@ model fabrics {
   qty   Int?
   
   orderTemplates OrderTemplateFabric[]
+  orders         OrderFabric[]         @relation("FabricToOrder")
 }
 
 model accessories {
@@ -100,6 +112,7 @@ model accessories {
   qty   Int
   
   orderTemplates OrderTemplateAccessory[]
+  orders         OrderAccessory[]         @relation("AccessoryToOrder")
 }
 
 model velcro {
@@ -110,6 +123,79 @@ model velcro {
   qty   Int?
   
   orderTemplates OrderTemplateVelcro[]
+  orders         OrderVelcro[]         @relation("VelcroToOrder")
+}
+
+model OrderZipper {
+  id       String  @id @default(uuid())
+  orderId  String
+  zipperId String
+  qty      Float
+  price    Int?
+  
+  order    orders  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  zipper   zippers @relation("ZipperToOrder", fields: [zipperId], references: [id], onDelete: Cascade)
+  
+}
+
+model OrderThread {
+  id       String  @id @default(uuid())
+  orderId  String
+  threadId String
+  qty      Float
+  price    Int?
+  
+  order    orders  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  thread   threads @relation("ThreadToOrder", fields: [threadId], references: [id], onDelete: Cascade)
+  
+}
+
+model OrderButton {
+  id       String  @id @default(uuid())
+  orderId  String
+  buttonId String
+  qty      Float
+  price    Int?
+  
+  order    orders  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  button   buttons @relation("ButtonToOrder", fields: [buttonId], references: [id], onDelete: Cascade)
+  
+}
+
+model OrderFabric {
+  id       String  @id @default(uuid())
+  orderId  String
+  fabricId String
+  qty      Float
+  price    Int?
+  
+  order    orders  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fabric   fabrics @relation("FabricToOrder", fields: [fabricId], references: [id], onDelete: Cascade)
+  
+}
+
+model OrderAccessory {
+  id          String      @id @default(uuid())
+  orderId     String
+  accessoryId String
+  qty         Float
+  price       Int?
+  
+  order       orders      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  accessory   accessories @relation("AccessoryToOrder", fields: [accessoryId], references: [id], onDelete: Cascade)
+  
+}
+
+model OrderVelcro {
+  id       String @id @default(uuid())
+  orderId  String
+  velcroId String
+  qty      Float
+  price    Int?
+  
+  order    orders @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  velcro   velcro @relation("VelcroToOrder", fields: [velcroId], references: [id], onDelete: Cascade)
+  
 }
 
 model OrderTemplate {

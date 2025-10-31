@@ -4,9 +4,9 @@ import { unlink } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
 
-export async function DELETE(req: Request,  context: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
+    const { id } = await context.params
     const order = await prisma.orders.findUnique({
       where: { id: id },
       select: { image_urls: true },
@@ -25,7 +25,6 @@ export async function DELETE(req: Request,  context: { params: Promise<{ id: str
           }
         } catch (fileError) {
           console.error(`[v0] Error deleting image file ${imageUrl}:`, fileError)
-        
         }
       }
     }
@@ -33,7 +32,7 @@ export async function DELETE(req: Request,  context: { params: Promise<{ id: str
     await prisma.orders.delete({
       where: { id: id },
     })
-    console.log(req)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Ошибка удаления заказа:", error)
@@ -41,33 +40,57 @@ export async function DELETE(req: Request,  context: { params: Promise<{ id: str
   }
 }
 
-export async function GET(
-  req: Request,
-  context: { params: Promise<{ id: string }>}
-) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
+    const { id } = await context.params
     const order = await prisma.orders.findUnique({
       where: {
-        id: (id)
+        id: id,
       },
       include: {
         customer: true,
+        orderZippers: {
+          include: {
+            zipper: true,
+          },
+        },
+        orderThreads: {
+          include: {
+            thread: true,
+          },
+        },
+        orderButtons: {
+          include: {
+            button: true,
+          },
+        },
+        orderFabrics: {
+          include: {
+            fabric: true,
+          },
+        },
+        orderAccessories: {
+          include: {
+            accessory: true,
+          },
+        },
+        orderVelcro: {
+          include: {
+            velcro: true,
+          },
+        },
       },
     })
 
     if (!order) {
-      return NextResponse.json(
-        { error: `Order with id ${id} not found` },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: `Order with id ${id} not found` }, { status: 404 })
     }
-    console.log(req)
+
     return NextResponse.json(order, { status: 200 })
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 })
   }
 }

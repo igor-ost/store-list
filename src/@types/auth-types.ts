@@ -8,6 +8,7 @@ export type LoginSuccessResponse = {
     id: string;
     email: string;
     name: string;
+    token: string;
 }
 export type LoginErrorResponse = {
     error:string;
