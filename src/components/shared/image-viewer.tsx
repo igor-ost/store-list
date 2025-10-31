@@ -243,7 +243,7 @@ export function ImageViewer({ images, initialIndex, onClose }: ImageViewerProps)
                   index === currentIndex ? "border-white scale-110" : "border-white/30 hover:border-white/60"
                 }`}
               >
-                <Image src={url || "/placeholder.svg"} alt={`Миниатюра ${index + 1}`} fill className="object-cover" />
+                <Image src={ "http://9140475.kz" + url || "/placeholder.svg"} alt={`Миниатюра ${index + 1}`} fill className="object-cover" />
               </button>
             ))}
           </div>
