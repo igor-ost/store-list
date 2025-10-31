@@ -197,7 +197,7 @@ export function ImageViewer({ images, initialIndex, onClose }: ImageViewerProps)
         >
           <div className="relative w-[80vw] h-[80vh]">
             <Image
-              src={images[currentIndex] || "/placeholder.svg"}
+              src={ "http://9140475.kz" +  images[currentIndex] || "/placeholder.svg"}
               alt={`Фото ${currentIndex + 1}`}
               fill
               className="object-contain select-none"
