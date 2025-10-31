@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ["9140475.kz", "localhost"], // ← укажи свои домены
+  },
 };
 
 export default nextConfig;
