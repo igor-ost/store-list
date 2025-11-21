@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { ReactNode, useState } from "react"
+import { type ReactNode, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,40 +16,52 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { ProductMaterialDialog } from "./product-material-dialog"
-import { Materials, ProductsTemplate } from "@/app/reference-books/page"
-import ProductMaterial from "./product-material"
+import type { Materials, ProductsTemplate } from "@/app/reference-books/page"
+import ProductMaterialMini from "./product-material-mini"
+
 
 interface OrderTemplateFormProps {
-  children: ReactNode
+  children?: ReactNode
   template?: ProductsTemplate
   materials: Materials
-  onCreate: (name: string, descirption: string, materials:Materials) => void
+  onCreate: (name: string, descirption: string, materials: Materials) => void
   onUpdate: (id: string, name: string, descirption: string, materials: Materials) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  prefilledName?: string
 }
 
-
-export function ProductDialog({ template, materials,onCreate, onUpdate,children }: OrderTemplateFormProps) {
-  const [open, setOpen] = useState(false)
+export function ProductDialog({
+  template,
+  materials,
+  onCreate,
+  onUpdate,
+  children,
+  open,
+  onOpenChange,
+  prefilledName = "",
+}: OrderTemplateFormProps) {
+  const [internalOpen, setInternalOpen] = useState(open ?? false)
   const [formData, setFormData] = useState(
     template || {
       id: "",
-      name: "",
+      name: prefilledName,
       description: "",
       materials: {
-        zippers:[],
-        threads:[],
-        buttons:[],
-        fabrics:[],
-        accessories:[],
-        velcro:[]
-      }
+        zippers: [],
+        threads: [],
+        buttons: [],
+        fabrics: [],
+        accessories: [],
+        velcro: [],
+      },
     },
   )
 
+  const finalOpen = open !== undefined ? open : internalOpen
+  const setFinalOpen = onOpenChange ?? setInternalOpen
+
   const handleAddMaterial = (id: string, qty: number, type: keyof Materials) => {
-    console.log(id, qty, type)
-
-
     const item = materials[type].find((m) => m.id === id)
     if (!item) return
 
@@ -57,11 +69,8 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
       ...prev,
       materials: {
         ...prev.materials,
-        [type]: [
-          ...prev.materials[type],
-          { ...item, qty } 
-        ]
-      }
+        [type]: [...prev.materials[type], { ...item, qty }],
+      },
     }))
   }
 
@@ -75,29 +84,40 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
     }))
   }
 
-
   const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault()
-      setOpen(false)
-      if (template) {
-        onUpdate(formData.id, formData.name, formData.description, formData.materials)
-      } else {
-        onCreate(formData.name, formData.description, formData.materials, )
-      }
+    e.preventDefault()
+    setFinalOpen(false)
+    if (template) {
+      onUpdate(formData.id, formData.name, formData.description, formData.materials)
+    } else {
+      onCreate(formData.name, formData.description, formData.materials)
+    }
+    // Reset form
+    setFormData({
+      id: "",
+      name: "",
+      description: "",
+      materials: {
+        zippers: [],
+        threads: [],
+        buttons: [],
+        fabrics: [],
+        accessories: [],
+        velcro: [],
+      },
+    })
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={finalOpen} onOpenChange={setFinalOpen}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Новый шаблон</DialogTitle>
+          <DialogTitle>{template ? "Редактировать" : "Новое"} шаблон</DialogTitle>
           <DialogDescription>Заполните информацию о шаблоне и добавьте необходимые материалы</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Название изделия</Label>
@@ -123,17 +143,15 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
             </div>
           </div>
 
-
-
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Материалы</h3>
-              <ProductMaterialDialog handleAdd={handleAddMaterial} materials={materials}/>
+              <ProductMaterialDialog handleAdd={handleAddMaterial} materials={materials} />
             </div>
 
             <div className="space-y-2">
               {formData.materials.accessories.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"accessories_" + index}
                   id={material.id}
                   name={material.name}
@@ -144,7 +162,7 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
                 />
               ))}
               {formData.materials.buttons.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"buttons_" + index}
                   id={material.id}
                   name={material.color + " " + material.type}
@@ -155,7 +173,7 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
                 />
               ))}
               {formData.materials.fabrics.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"fabrics_" + index}
                   id={material.id}
                   name={material.name + " " + material.color}
@@ -166,7 +184,7 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
                 />
               ))}
               {formData.materials.threads.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"threads_" + index}
                   id={material.id}
                   name={material.color + " " + material.type}
@@ -177,7 +195,7 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
                 />
               ))}
               {formData.materials.velcro.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"velcro_" + index}
                   id={material.id}
                   name={material.name}
@@ -188,7 +206,7 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
                 />
               ))}
               {formData.materials.zippers.map((material, index) => (
-                <ProductMaterial
+                <ProductMaterialMini
                   key={"zippers_" + index}
                   id={material.id}
                   name={material.color + " " + material.type}
@@ -201,10 +219,10 @@ export function ProductDialog({ template, materials,onCreate, onUpdate,children 
             </div>
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
-            Создать изделие
+          <Button onClick={handleSubmit} className="w-full" size="lg">
+            {template ? "Сохранить" : "Создать"} изделие
           </Button>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

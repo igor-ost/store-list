@@ -105,6 +105,39 @@ export function OrderForm() {
   const [customers, setCustomers] = useState<CustomerGeneral[]>()
   const [products, setProducts] = useState<ProductsGeneral[]>()
 
+  const handleCreateCustomer = async (name:string,bin:string) => {
+
+    try {
+      const data = {name:name,bin:bin}
+      const response = await Api.customers.create(data)
+      if (response) {
+        setCustomers([...(customers || []), response])
+      }
+      toast.success(`Заказчик ${data.name}, создан`)
+    } catch (error) {
+      toast.error(`Ошибка: ${error}`)
+    } finally {
+    }
+  }
+
+  const handleCreateProducts = async (name: string, description: string, materials: Materials) => {
+        try {
+          const data = {
+            name: name, 
+            description: description,
+            materials: materials,
+          }
+          const response = await Api.products.create(data)
+          if (response) {
+            setProducts([...(products || []), response])
+          }
+          toast.success(`Изделия ${data.name}, создана`)
+        } catch (error) {
+          toast.error(`Ошибка: ${error}`)
+        } finally {
+        }
+  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -371,6 +404,7 @@ export function OrderForm() {
                     <Label htmlFor="customer_name">Заказчик</Label>
                     {customers && (
                       <CustomerSelect
+                        onCreateCustomer={handleCreateCustomer}
                         customers={customers}
                         value={formData.customer_id}
                         onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
@@ -390,6 +424,8 @@ export function OrderForm() {
                     <Label htmlFor="product_name">Изделие</Label>
                     {products && (
                       <ProductSelect
+                        onCreateProduct={handleCreateProducts}
+                        materials={materials}
                         products={products}
                         value={formData.product_id}
                         onValueChange={(value) => setFormData({ ...formData, product_id: value })}

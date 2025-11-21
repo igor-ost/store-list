@@ -47,7 +47,7 @@ export default function FabricsReferences({fabrics,setFabrics,loading,setLoading
       setLoading(true)
       const response = await Api.fabrics.create(data)
       if (response) {
-        setFabrics((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setFabrics((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Ткань ${data.name}-${data.type}, создана`)
     } catch (error) {
@@ -160,7 +160,7 @@ export default function FabricsReferences({fabrics,setFabrics,loading,setLoading
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[20%]">Название</TableHead>
-                    <TableHead className="w-[15%]">Тип</TableHead>
+                    {/* <TableHead className="w-[15%]">Тип</TableHead> */}
                     <TableHead className="w-[15%]">Цвет</TableHead>
                     <TableHead className="w-[15%]">Цена</TableHead>
                     <TableHead className="w-[10%]">Кол-во</TableHead>
@@ -171,9 +171,9 @@ export default function FabricsReferences({fabrics,setFabrics,loading,setLoading
                   {filteredFabrics.map((fabric) => (
                     <TableRow key={fabric.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{fabric.name}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Badge variant="secondary">{fabric.type}</Badge>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>{fabric.color || "-"}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{fabric.price ? `${fabric.price} ₸` : "-"}</Badge>

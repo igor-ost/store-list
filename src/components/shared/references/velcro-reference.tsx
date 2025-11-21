@@ -43,7 +43,7 @@ export default function VelcroReferences({velcro,setVelcro,loading,setLoading} :
       setLoading(true)
       const response = await Api.velcro.create(data)
       if (response) {
-        setVelcro((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setVelcro((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Велькро ${data.name}, создана`)
     } catch (error) {

@@ -45,7 +45,7 @@ export default function ThreadsReferences({threads,setThreads,loading,setLoading
       setLoading(true)
       const response = await Api.threads.create(data)
       if (response) {
-        setThreads((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setThreads((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Нитка ${data.color}-${data.type}, создана`)
     } catch (error) {

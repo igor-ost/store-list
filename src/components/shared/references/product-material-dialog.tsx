@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, ReactNode } from "react"
+import { useState, useMemo, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,7 +41,11 @@ export function ProductMaterialDialog({
   materials,
   children,
   handleAdd,
-}: { materials: Materials;children?:ReactNode; handleAdd: (id: string, qty: number,type: keyof LoadedProductMaterials) => void }) {
+}: {
+  materials: Materials
+  children?: ReactNode
+  handleAdd: (id: string, qty: number, type: keyof LoadedProductMaterials) => void
+}) {
   const [open, setOpen] = useState(false)
   const [typePopoverOpen, setTypePopoverOpen] = useState(false)
   const [materialPopoverOpen, setMaterialPopoverOpen] = useState(false)
@@ -61,12 +65,11 @@ export function ProductMaterialDialog({
   const filteredMaterials = useMemo(() => {
     const results: Array<{ id: string; label: string; type: string; typeLabel: string }> = []
 
-    
     const addMaterials = (
-      items: any[] | undefined,  // eslint-disable-line @typescript-eslint/no-explicit-any
+      items: any[] | undefined, // eslint-disable-line @typescript-eslint/no-explicit-any
       type: string,
       typeLabel: string,
-      formatter: (item: any) => string,  // eslint-disable-line @typescript-eslint/no-explicit-any
+      formatter: (item: any) => string, // eslint-disable-line @typescript-eslint/no-explicit-any
     ) => {
       if (!items) return
       items.forEach((item) => {
@@ -117,9 +120,7 @@ export function ProductMaterialDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-          {children ? children : <Button>Добавить</Button>}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children ? children : <Button>Добавить</Button>}</DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl">Добавить материал</DialogTitle>
@@ -243,7 +244,7 @@ export function ProductMaterialDialog({
 
           <div className="space-y-2">
             <Label htmlFor="material-qty" className="text-sm font-medium">
-              Количество 
+              Количество
             </Label>
             <div className="relative">
               <Input

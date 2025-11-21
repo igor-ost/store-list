@@ -37,7 +37,7 @@ export default function AccessoriesReferences({accessories,setAccessories,loadin
       setLoading(true)
       const response = await Api.accessories.create(data)
       if (response) {
-        setAccessories((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setAccessories((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Фурнитура ${data.name}, создан`)
     } catch (error) {

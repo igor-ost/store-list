@@ -45,7 +45,7 @@ export default function ButtonsReferences({buttons,setButtons,loading,setLoading
       setLoading(true)
       const response = await Api.buttons.create(data)
       if (response) {
-        setButtons((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setButtons((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Кнопка ${data.color}-${data.type}, создана`)
     } catch (error) {

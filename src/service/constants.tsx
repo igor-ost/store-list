@@ -7,6 +7,7 @@ const ApiRouter = {
     ORDER_GET_LIST: "orders/",
     ORDER_REMOVE_BY_ID: "orders/",
     ORDER_GET_BY_ID: "orders/",
+    ORDER_GET_BY_CUSTOMER : "orders/post/",
 
     WORKERS_GET_LIST: "users/",
     WORKERS_REMOVE_BY_ID: "users/",

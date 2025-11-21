@@ -66,7 +66,7 @@ export function FabricDialog({ children, fabric, onCreate,onUpdate }: FabricDial
               required
             />
           </div>
-          <div>
+          {/* <div>
             <Label htmlFor="type">Тип</Label>
             <Input
               id="type"
@@ -74,7 +74,7 @@ export function FabricDialog({ children, fabric, onCreate,onUpdate }: FabricDial
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               required
             />
-          </div>
+          </div> */}
           <div>
             <Label htmlFor="color">Цвет</Label>
             <Input

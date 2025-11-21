@@ -47,7 +47,7 @@ export default function ZippersReferences({zippers,setZippers,loading,setLoading
       setLoading(true)
       const response = await Api.zippers.create(data)
       if (response) {
-        setZippers((prev) => [...prev, { ...data, id: Date.now().toString() }])
+        setZippers((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Молния ${data.color}-${data.type}, создана`)
     } catch (error) {

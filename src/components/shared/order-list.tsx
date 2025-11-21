@@ -21,7 +21,32 @@ import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { OrdersListSkeleton } from "../loading/order-list"
 
-
+export     const getStatusBadge = (status: string) => {
+        switch (status) {
+            case "pending":
+                return (
+                    <Badge variant="destructive" className="text-xs">
+                        Ожидает
+                    </Badge>
+                )
+            case "in_progress":
+                return <Badge className="bg-blue-100 text-blue-800 text-xs">В работе</Badge>
+            case "completed":
+                return <Badge className="bg-green-100 text-green-800 text-xs">Завершен</Badge>
+            case "cancelled":
+                return (
+                    <Badge variant="destructive" className="text-xs">
+                        Отменен
+                    </Badge>
+                )
+            default:
+                return (
+                    <Badge variant="secondary" className="text-xs">
+                        {status}
+                    </Badge>
+                )
+        }
+    }
 
 interface OrdersListProps {
     orders: OrderGeneral[]
@@ -65,32 +90,7 @@ export function OrdersList({ orders }: OrdersListProps) {
         setCurrentPage(1)
     }
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "pending":
-                return (
-                    <Badge variant="destructive" className="text-xs">
-                        Ожидает
-                    </Badge>
-                )
-            case "in_progress":
-                return <Badge className="bg-blue-100 text-blue-800 text-xs">В работе</Badge>
-            case "completed":
-                return <Badge className="bg-green-100 text-green-800 text-xs">Завершен</Badge>
-            case "cancelled":
-                return (
-                    <Badge variant="destructive" className="text-xs">
-                        Отменен
-                    </Badge>
-                )
-            default:
-                return (
-                    <Badge variant="secondary" className="text-xs">
-                        {status}
-                    </Badge>
-                )
-        }
-    }
+
 
     const handleRemove = async (id:string) =>{
         setIsLoading(true)

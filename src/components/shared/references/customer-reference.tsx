@@ -1,17 +1,21 @@
 "use client"
 
-import { useState, SetStateAction } from "react"
+import type React from "react"
+
+import { useState, type SetStateAction } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit } from "lucide-react"
+import { Search, Plus, Trash2, Edit, Eye } from "lucide-react"
 import { Table as TableComponent, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CustomerDialog } from "@/components/shared/references/customer-dialog"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
 import { DeleteDialog } from "../delete-dialog"
 import { ReferenceSkeleton } from "../../loading/reference"
+import { OrdersDialog } from "./orders-dialog"
+
 
 type Customer = {
   id: string
@@ -22,20 +26,20 @@ type Customer = {
 type Props = {
   customers: Customer[]
   loading: boolean
-  setCustomers: React.Dispatch<SetStateAction<Customer[]>>;
-  setLoading: React.Dispatch<SetStateAction<boolean>>;
+  setCustomers: React.Dispatch<SetStateAction<Customer[]>>
+  setLoading: React.Dispatch<SetStateAction<boolean>>
 }
 
-export default function CustomerReference({customers,setCustomers,loading,setLoading} : Props) {
+export default function CustomerReference({ customers, setCustomers, loading, setLoading }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const handleCreate = async (name:string,bin:string) => {
+  const handleCreate = async (name: string, bin: string) => {
     try {
-      const data = {name:name,bin:bin}
+      const data = { name: name, bin: bin }
       setLoading(true)
       const response = await Api.customers.create(data)
-      if(response){
-        setCustomers((prev) => [...prev, { ...data, id: Date.now().toString() }])
+      if (response) {
+        setCustomers((prev) => [...prev, { ...data, id: response.id }])
       }
       toast.success(`Заказчик ${data.name}, создан`)
     } catch (error) {
@@ -45,14 +49,14 @@ export default function CustomerReference({customers,setCustomers,loading,setLoa
     }
   }
 
-  const handleUpdate = async (id:string,name:string,bin:string) => {
-    if(id){
+  const handleUpdate = async (id: string, name: string, bin: string) => {
+    if (id) {
       const data = {
         id: id,
         name: name,
-        bin: bin
+        bin: bin,
       }
-       try {
+      try {
         const response = await Api.customers.update(data)
         if (response) {
           setCustomers((prev) => prev.map((item) => (item.id === data.id ? data : item)))
@@ -71,7 +75,7 @@ export default function CustomerReference({customers,setCustomers,loading,setLoa
     try {
       const response = await Api.customers.removeById(id)
       if (response.success) {
-        setCustomers((prev)=>prev.filter(item=>item.id!==id))
+        setCustomers((prev) => prev.filter((item) => item.id !== id))
         toast.success(`Заказчик - ${name}, был успешно удалён`)
       }
     } catch (error) {
@@ -82,13 +86,12 @@ export default function CustomerReference({customers,setCustomers,loading,setLoa
     }
   }
 
-
   const filteredCustomers = customers.filter(
     (customer) => customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || customer.bin.includes(searchTerm),
   )
 
   if (loading) {
-    return <ReferenceSkeleton/>
+    return <ReferenceSkeleton />
   }
 
   return (
@@ -101,7 +104,6 @@ export default function CustomerReference({customers,setCustomers,loading,setLoa
             </div>
 
             <div className="flex items-center gap-4">
-
               <CustomerDialog onUpdate={handleUpdate} onCreate={handleCreate}>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -137,54 +139,55 @@ export default function CustomerReference({customers,setCustomers,loading,setLoa
           </Card>
         ) : (
           <>
-              <Card>
-                <CardContent className="px-4">
-                  <TableComponent>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[40%]">Название</TableHead>
-                        <TableHead className="w-[20%]">БИН</TableHead>
-                        <TableHead className="w-[20%] text-right">Действия</TableHead>
+            <Card>
+              <CardContent className="px-4">
+                <TableComponent>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Название</TableHead>
+                      <TableHead className="w-[20%]">БИН</TableHead>
+                      <TableHead className="w-[20%] text-right">Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCustomers.map((customer) => (
+                      <TableRow key={customer.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          <div className="max-w-[300px] truncate" title={customer.name}>
+                            {customer.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-mono text-xs">
+                            {customer.bin}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <OrdersDialog customerId={customer.id} customerName={customer.name}/>
+                            <CustomerDialog customer={customer} onUpdate={handleUpdate} onCreate={handleCreate}>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </CustomerDialog>
+                            <DeleteDialog
+                              id={customer.id}
+                              title="Удалить заказчика"
+                              onConfirm={() => handleDelete(customer.id, customer.name)}
+                              itemName={customer.name}
+                            >
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </DeleteDialog>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            <div className="max-w-[300px] truncate" title={customer.name}>
-                              {customer.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="font-mono text-xs">
-                              {customer.bin}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <CustomerDialog customer={customer }onUpdate={handleUpdate} onCreate={handleCreate}>
-                                <Button variant="ghost" size="sm" >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              </CustomerDialog>
-                              <DeleteDialog
-                                id={customer.id}
-                                title="Удалить заказчика"
-                                onConfirm={() => handleDelete(customer.id, customer.name)}
-                                itemName={customer.name}
-                              >
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </DeleteDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </TableComponent>
-                </CardContent>
-              </Card>
+                    ))}
+                  </TableBody>
+                </TableComponent>
+              </CardContent>
+            </Card>
           </>
         )}
       </main>
