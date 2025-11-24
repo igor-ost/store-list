@@ -133,7 +133,7 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
               type="button"
               variant="outline"
               disabled={isUploading}
-              className="w-full cursor-pointer bg-transparent"
+              className="w-full cursor-pointer bg-white"
               asChild
             >
               <span>

@@ -366,7 +366,7 @@ export function OrderForm() {
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
-          <Card>
+          <Card className="bg-blue-50">
             <CardHeader>
               <CardTitle>Основная информация о заказе</CardTitle>
             </CardHeader>
@@ -376,6 +376,7 @@ export function OrderForm() {
                   <Label htmlFor="order_number">Номер заказа</Label>
                   <Input
                     id="order_number"
+                    className="bg-white"
                     value={formData.order_number}
                     onChange={(e) => setFormData({ ...formData, order_number: e.target.value })}
                     required
@@ -386,6 +387,7 @@ export function OrderForm() {
                   <Input
                     id="order_date"
                     type="date"
+                    className="bg-white"
                     value={formData.order_date}
                     onChange={(e) => setFormData({ ...formData, order_date: e.target.value })}
                     required
@@ -442,6 +444,7 @@ export function OrderForm() {
                     id="product_name"
                     placeholder="Название изделия"
                     value={formData.product_name}
+                    className="bg-white"
                     onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                     required
                   />
@@ -451,6 +454,7 @@ export function OrderForm() {
                   <Input
                     id="size"
                     placeholder="Размер"
+                    className="bg-white"
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                   />
@@ -463,6 +467,7 @@ export function OrderForm() {
                   <Input
                     id="quantity"
                     type="number"
+                    className="bg-white"
                     min="1"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number.parseInt(e.target.value) })}
@@ -475,7 +480,7 @@ export function OrderForm() {
                     value={formData.status}
                     onValueChange={(value) => setFormData({ ...formData, status: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -491,6 +496,7 @@ export function OrderForm() {
                 <Label htmlFor="description">Описание модели</Label>
                 <Textarea
                   id="description"
+                  className="bg-white"
                   placeholder="Подробное описание изделия..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -508,7 +514,7 @@ export function OrderForm() {
         </TabsContent>
 
         <TabsContent value="materials" className="space-y-6">
-          <Card>
+          <Card className="bg-blue-50">
             <CardHeader>
               <CardTitle>Материалы изделия</CardTitle>
             </CardHeader>
@@ -582,7 +588,7 @@ export function OrderForm() {
 
         <TabsContent value="workers" className="space-y-6">
           {filteredWorkers?.length ? (
-            <Card>
+            <Card className="bg-blue-50">
               <CardHeader>
                 <CardTitle>Работники</CardTitle>
               </CardHeader>
@@ -596,7 +602,7 @@ export function OrderForm() {
                     return (
                       <div
                         key={worker.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition 
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer bg-white transition 
                 ${isSelected ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}
                       >
                         <Checkbox
@@ -632,7 +638,7 @@ export function OrderForm() {
         </TabsContent>
 
         <TabsContent value="additional" className="space-y-6">
-          <Card>
+          <Card className="bg-blue-50">
             <CardHeader>
               <CardTitle>Дополнительная информация</CardTitle>
             </CardHeader>
@@ -641,6 +647,7 @@ export function OrderForm() {
                 <Label htmlFor="notes">Примечания</Label>
                 <Textarea
                   id="notes"
+                  className="bg-white"
                   placeholder="Дополнительные примечания к заказу..."
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}

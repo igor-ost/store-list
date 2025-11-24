@@ -9,10 +9,13 @@ import { ProductReference } from "@/components/shared/references/product-refenre
 import ThreadsReferences from "@/components/shared/references/thread-reference"
 import VelcroReferences from "@/components/shared/references/velcro-reference"
 import ZippersReferences from "@/components/shared/references/zippers-reference"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Api } from "@/service/api-clients"
+import { Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import * as XLSX from 'xlsx'
 
 type Customer = {
   id: string
@@ -118,6 +121,45 @@ export default function ReferencesPage() {
     fabrics: [],
   });
 
+const handleExport = () => {
+  try {
+    const workbook = XLSX.utils.book_new();
+
+    const createSheet = (data: any[], sheetName: string) => {
+      if (data.length === 0) return;
+
+      const formatted = data.map(item => {
+        const row: Record<string, any> = {};
+
+        if (item.name) row["Наименование"] = item.name;
+        if (item.color) row["Цвет"] = item.color;
+        if (item.type) row["Вид"] = item.type;
+        if (item.unit) row["Ед. изм"] = item.unit;
+        if (item.price) row["Цена"] = item.price;
+        if (item.qty) row["Остаток"] = item.qty;
+
+        return row;
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(formatted);
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    };
+
+    createSheet(accessories, "Фурнитура");
+    createSheet(buttons, "Пуговицы");
+    createSheet(fabrics, "Ткани");
+    createSheet(threads, "Нитки");
+    createSheet(zippers, "Молнии");
+    createSheet(velcro, "Велькро");
+
+    XLSX.writeFile(workbook, `Остатки_${new Date().toLocaleDateString()}.xlsx`);
+    toast.success("Файл успешно сформирован");
+  } catch (error) {
+    console.error(error);
+    toast.error("Ошибка при формировании Excel файла");
+  }
+};
+
   const fetchMaterials = async () => {
     try {
       setLoading(true)
@@ -196,6 +238,8 @@ export default function ReferencesPage() {
     <div className="min-h-screen bg-background">
       <Header active={"reference-books"} />
       <main className="container mx-auto px-4 py-8">
+        
+        <Button onClick={handleExport} className="my-2 ml-auto" variant="default"><Download/>Выгрузить Остатки</Button>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger className="cursor-pointer" value="orders">

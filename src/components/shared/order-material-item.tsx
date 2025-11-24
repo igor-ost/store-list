@@ -27,7 +27,7 @@ export function OrderMaterialItem({
   onDelete,
 }: OrderMaterialItemProps) {
   return (
-    <div className="flex items-center justify-between gap-4 p-3 border rounded-lg">
+    <div className="flex items-center justify-between gap-4 p-3 border rounded-lg bg-white">
       <div className="flex-1">
         <p className="font-medium">{name}</p>
         <p className="text-sm text-slate-600">
