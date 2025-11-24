@@ -55,7 +55,14 @@ type Thread = {
   price: number
   qty: number
 }
-
+type ExportItem = {
+  name?: string;
+  color?: string;
+  type?: string;
+  unit?: string;
+  price?: number;
+  qty?: number;
+};
 type Velcro = {
   id: string
   name: string
@@ -125,18 +132,18 @@ const handleExport = () => {
   try {
     const workbook = XLSX.utils.book_new();
 
-    const createSheet = (data: any[], sheetName: string) => {
-      if (data.length === 0) return;
+    const createSheet = (data: ExportItem[], sheetName: string) => {
+      if (!data || data.length === 0) return;
 
-      const formatted = data.map(item => {
-        const row: Record<string, any> = {};
+      const formatted = data.map((item) => {
+        const row: Record<string, string | number> = {};
 
         if (item.name) row["Наименование"] = item.name;
         if (item.color) row["Цвет"] = item.color;
         if (item.type) row["Вид"] = item.type;
         if (item.unit) row["Ед. изм"] = item.unit;
-        if (item.price) row["Цена"] = item.price;
-        if (item.qty) row["Остаток"] = item.qty;
+        if (item.price !== undefined) row["Цена"] = item.price;
+        if (item.qty !== undefined) row["Остаток"] = item.qty;
 
         return row;
       });
