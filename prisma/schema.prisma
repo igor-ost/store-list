@@ -15,6 +15,7 @@ model User {
   role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  workLogs  WorkLog[]
 }
 
 model orders {
@@ -25,6 +26,8 @@ model orders {
   product_id    String
   product_name  String
   description   String
+  cutting_price Int       @default(0)
+  sewing_price  Int       @default(0)
   quantity      Int       @default(1)
   status        String    @default("pending")
   notes         String?
@@ -40,6 +43,8 @@ model orders {
   orderFabrics     OrderFabric[]
   orderAccessories OrderAccessory[]
   orderVelcro      OrderVelcro[]
+
+  workLogs  WorkLog[]
 
   @@map("orders")
 }
@@ -283,4 +288,20 @@ model OrderTemplateVelcro {
   velcro          velcro        @relation(fields: [velcroId], references: [id], onDelete: Cascade)
   
   @@unique([orderTemplateId, velcroId])
+}
+
+
+
+model WorkLog {
+  id        String   @id @default(uuid())
+  orderId   String
+  workerId  String
+  workType  String    
+  quantity  Float    
+  createdAt DateTime @default(now())
+  
+  order     orders   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  worker    User     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  @@map("work_logs")
 }
