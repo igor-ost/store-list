@@ -7,9 +7,10 @@ import { useEffect, useState } from "react"
 import type { OrderInfo } from "@/@types/orders-types"
 import { Api } from "@/service/api-clients"
 import { toast } from "sonner"
-import { OrderDetailsSkeleton } from "../loading/order-details"
-import Image from "next/image"
 import { ImageViewer } from "./image-viewer"
+import { OrderDetailsSkeleton } from "../loading/order-details"
+import { OrderWorkJournal } from "./order-work-journal"
+
 
 interface OrderDetailsProps {
   id: string
@@ -75,13 +76,13 @@ export function OrderDetails({ id }: OrderDetailsProps) {
     <div className="space-y-4">
       {images.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
               <ImageIcon className="h-4 w-4" />
               Изображения заказа
             </CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {images.map((url, index) => (
                 <button
@@ -106,13 +107,13 @@ export function OrderDetails({ id }: OrderDetailsProps) {
       )}
 
       <Card className="border-border">
-        <CardHeader >
+        <CardHeader>
           <CardTitle className="flex items-center justify-between text-base font-medium">
             <span className="text-foreground">Информация о заказе</span>
             {getStatusBadge(order.status)}
           </CardTitle>
         </CardHeader>
-        <CardContent >
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg border border-border">
               <Hash className="h-5 w-5 text-muted-foreground" />
@@ -150,7 +151,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
             <div className="text-sm text-muted-foreground mb-1">Наименование изделия</div>
             <div className="text-lg font-medium text-foreground">{order.product_name}</div>
           </div>
-        <div className="mt-4 p-4 bg-muted/20 border-l-2 border-foreground/20 rounded">
+          <div className="mt-4 p-4 bg-muted/20 border-l-2 border-foreground/20 rounded">
             <div className="text-sm text-muted-foreground mb-1">Описание изделия</div>
             <div className="text-lg font-medium text-foreground">{order.description}</div>
           </div>
@@ -160,15 +161,43 @@ export function OrderDetails({ id }: OrderDetailsProps) {
               <div className="text-foreground">{order.notes}</div>
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+              {order.cutting_price !== undefined && order.cutting_price > 0 && (
+                <div className="p-4 rounded-lg border-l-2 border-l-green-500 bg-green-50/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium  text-green-900">Стоимость крой</div>
+                      <div className="text-2xl font-bold text-green-700 mt-1">{order.cutting_price.toFixed(2)} ₸</div>
+                    </div>
+                    <div className="text-4xl opacity-10 text-green-600">✂️</div>
+                  </div>
+                </div>
+              )}
+              {order.sewing_price !== undefined && order.sewing_price > 0 && (
+                <div className="p-4 rounded-lg border-l-2 border-l-green-500 bg-green-50/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-green-900">Стоимость пошив</div>
+                      <div className="text-2xl font-bold text-green-700 mt-1">{order.sewing_price.toFixed(2)} ₸</div>
+                    </div>
+                    <div className="text-4xl opacity-10 text-green-600">🧵</div>
+                  </div>
+                </div>
+              )}
+            </div>
         </CardContent>
       </Card>
 
+      
+      <OrderWorkJournal orderId={id} />
+
       {order.orderFabrics && order.orderFabrics.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Ткани</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderFabrics.map((item) => (
                 <div
@@ -206,10 +235,10 @@ export function OrderDetails({ id }: OrderDetailsProps) {
 
       {order.orderZippers && order.orderZippers.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Молнии</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderZippers.map((item) => (
                 <div
@@ -240,10 +269,10 @@ export function OrderDetails({ id }: OrderDetailsProps) {
 
       {order.orderThreads && order.orderThreads.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Нитки</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderThreads.map((item) => (
                 <div
@@ -274,10 +303,10 @@ export function OrderDetails({ id }: OrderDetailsProps) {
 
       {order.orderButtons && order.orderButtons.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Пуговицы</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderButtons.map((item) => (
                 <div
@@ -308,10 +337,10 @@ export function OrderDetails({ id }: OrderDetailsProps) {
 
       {order.orderAccessories && order.orderAccessories.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Аксессуары</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderAccessories.map((item) => (
                 <div
@@ -342,10 +371,10 @@ export function OrderDetails({ id }: OrderDetailsProps) {
 
       {order.orderVelcro && order.orderVelcro.length > 0 && (
         <Card className="border-border">
-          <CardHeader >
+          <CardHeader>
             <CardTitle className="text-base font-medium text-foreground">Липучки</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {order.orderVelcro.map((item) => (
                 <div
@@ -373,6 +402,7 @@ export function OrderDetails({ id }: OrderDetailsProps) {
           </CardContent>
         </Card>
       )}
+
 
       {viewerIndex !== null && (
         <ImageViewer images={images} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />

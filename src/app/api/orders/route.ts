@@ -24,7 +24,9 @@ export async function POST(req: Request) {
           user_id: user_id,
           image_urls: general.image_urls,
           product_id: general.product_id,
-          description: general.description
+          description: general.description,
+          cutting_price: general.cutting_price,
+          sewing_price: general.sewing_price,
         },
       })
 

@@ -56,6 +56,13 @@ const ApiRouter = {
     PRODUCTS_UPDATE: "products/",
     PRODUCTS_GET_BY_ID: "products/",
 
-    MATERIALS_GET_LIST: "materials/"
+    MATERIALS_GET_LIST: "materials/",
+
+
+    WORKLOG_CREATE: "work-log/",
+    WORKLOG_GET_LIST: "work-log/",
+    WORKLOG_GET_LIST_BY_ID: "work-log/",
+
+    SALART_REPORT_GET_LIST:  "salart-report/",
 }
 export default ApiRouter;

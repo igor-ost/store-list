@@ -67,7 +67,9 @@ export type OrdersGetByIdErrorResponse = {
 }
  
 export interface OrderInfo {
-  id: string
+  id: string;
+  cutting_price: number
+  sewing_price: number;
   order_number: string
   order_date: string
   description: string

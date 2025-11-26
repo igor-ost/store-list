@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { X, Upload } from "lucide-react"
 import { toast } from "sonner"
-import Image from "next/image"
 import { ImageViewer } from "./image-viewer"
 
 interface ImageUploadProps {

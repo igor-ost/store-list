@@ -29,6 +29,8 @@ import { Accessories, Buttons, Fabrics, Threads, Velcro, Zipperz } from "@/@type
 
 interface OrderFormData {
   order_number: string
+  sewing_price:number
+  cutting_price: number;
   order_date: string
   customer_id: string
   product_id: string
@@ -82,6 +84,8 @@ export function OrderForm() {
 
   const [formData, setFormData] = useState<OrderFormData>({
     order_number: `ORD-${Date.now()}`,
+    sewing_price: 0,
+    cutting_price: 0,
     order_date: new Date().toISOString().split("T")[0],
     product_id: "",
     customer_id: "",
@@ -316,6 +320,12 @@ export function OrderForm() {
   }
 
 
+  const handlePriceChange = (field: "cutting_price" | "sewing_price", value: string) => {
+    setFormData({
+      ...formData,
+      [field]: value ? Number.parseFloat(value) : 0,
+    })
+  }
 
   const handleMaterialDelete = (materialType: keyof LoadedProductMaterials, materialId: string) => {
     if (!productMaterials) return
@@ -491,6 +501,50 @@ export function OrderForm() {
                   </Select>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 p-4 rounded-lg border border-green-200 bg-green-50/50">
+                <Label htmlFor="cutting_price" className="text-sm font-semibold text-green-900">
+                  Стоимость крой
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600">
+                      ₸
+                  </span>
+                  <Input
+                    id="cutting_price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="bg-white pl-9 border-green-300"
+                    placeholder="0.00"
+                    value={formData.cutting_price || ""}
+                    onChange={(e) => handlePriceChange("cutting_price", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 p-4 rounded-lg border border-green-200 bg-green-50/50">
+                <Label htmlFor="sewing_price" className="text-sm font-semibold text-green-900">
+                  Стоимость пошив
+                </Label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600">
+                      ₸
+                    </span>
+                  <Input
+                    id="sewing_price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="bg-white pl-9 border-green-300"
+                    placeholder="0.00"
+                    value={formData.sewing_price || ""}
+                    onChange={(e) => handlePriceChange("sewing_price", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
 
               <div>
                 <Label htmlFor="description">Описание модели</Label>

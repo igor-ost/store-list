@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Trash2, Edit, Eye } from "lucide-react"
+import { Search, Plus, Trash2, Edit } from "lucide-react"
 import { Table as TableComponent, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CustomerDialog } from "@/components/shared/references/customer-dialog"
 import { Api } from "@/service/api-clients"
@@ -95,7 +95,7 @@ export default function CustomerReference({ customers, setCustomers, loading, se
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between">

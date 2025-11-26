@@ -10,6 +10,8 @@ import * as threads from '@/service/services/threads'
 import * as velcro from '@/service/services/velcro'
 import * as products from '@/service/services/products'
 import * as materials from '@/service/services/materials'
+import * as worklog from '@/service/services/worklog'
+import * as salaryReport from '@/service/services/salary-report'
 export const Api = {
     auth,
     orders,
@@ -22,5 +24,7 @@ export const Api = {
     threads,
     velcro,
     products,
-    materials
+    materials,
+    worklog,
+    salaryReport
 };

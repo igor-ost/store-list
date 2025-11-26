@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw } from "lucide-react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 
 interface ImageViewerProps {
