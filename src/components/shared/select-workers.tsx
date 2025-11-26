@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { WorkersListSuccessResponse } from "@/@types/workers-types"
-
+import type { WorkersListSuccessResponse } from "@/@types/workers-types"
+import RoleBadge from "./role-badge"
 
 interface SelectProps {
   value?: string
@@ -16,7 +16,6 @@ interface SelectProps {
   disabled?: boolean
   workers: WorkersListSuccessResponse
 }
-
 
 export function SelectWorkers({
   value,
@@ -31,15 +30,13 @@ export function SelectWorkers({
   const selectedWorker = workers.find((worker) => worker.id === value)
 
   const filteredWorkers = React.useMemo(() => {
-    if (!searchQuery) return workers
+    const workersOnly = workers.filter((worker) => worker.role === "cutter" || worker.role === "seamstress")
+
+    if (!searchQuery) return workersOnly
 
     const query = searchQuery.toLowerCase()
-    return workers.filter(
-      (worker) =>
-        worker.name.toLowerCase().includes(query) ||
-        worker.role.toLowerCase().includes(query)
-    )
-  }, [searchQuery,workers])
+    return workersOnly.filter((worker) => worker.name.toLowerCase().includes(query))
+  }, [searchQuery, workers])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,9 +51,7 @@ export function SelectWorkers({
           {selectedWorker ? (
             <div className="flex items-center gap-2">
               <span className="font-medium">{selectedWorker.name}</span>
-              {selectedWorker.role && (
-                <span className="text-xs text-muted-foreground">({selectedWorker.role})</span>
-              )}
+              {selectedWorker.role && <span className="text-xs text-muted-foreground">({selectedWorker.role})</span>}
             </div>
           ) : (
             placeholder
@@ -83,7 +78,7 @@ export function SelectWorkers({
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="font-medium">{worker.name}</span>
-                    {worker.role && <span className="text-xs text-muted-foreground">({worker.role})</span>}
+                    <RoleBadge role={worker.role} />
                   </div>
                   <Check className={cn("size-4 shrink-0", value === worker.id ? "opacity-100" : "opacity-0")} />
                 </CommandItem>

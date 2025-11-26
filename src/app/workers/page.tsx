@@ -42,13 +42,13 @@ export default function WorkersPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Персонал</h1>
-            <p className="text-slate-600">Управление персоналом</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">Персонал - Работники</h1>
+            <p className="text-slate-600">Управление персоналом/работники</p>
           </div>
           <Link href="/workers/new">
             <Button className="flex items-center gap-2 cursor-pointer">
               <Plus className="h-4 w-4" />
-              Добавить персонал
+              Добавить
             </Button>
           </Link>
         </div>
