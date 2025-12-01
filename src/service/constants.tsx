@@ -64,5 +64,6 @@ const ApiRouter = {
     WORKLOG_GET_LIST_BY_ID: "work-log/",
 
     SALART_REPORT_GET_LIST:  "salart-report/",
+    ORDERS_REPORT_GET_LIST:  "orders-report",
 }
 export default ApiRouter;

@@ -12,14 +12,21 @@ interface Props {
 }
 
 export default function WorkLogForOrderTable({ logs, loading = false }: Props) {
-  const workTypeLabel = (type: string) => {
-    return type === "sewing" ? "Пошив" : "Крой"
-  }
+    const workTypeLabel = (type: string) => {
+      if (type === "sewing") return "Пошив"
+      if (type === "cutting") return "Крой"
+       if (type === "buttons") return "Пуговницы"  
 
-  const workTypeColor = (type: string) => {
-    return type === "sewing" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"
-  }
+      return "Неизвестно"
+    }
 
+    const workTypeColor = (type: string) => {
+      if (type === "sewing") return "bg-blue-100 text-blue-800"
+      if (type === "cutting") return "bg-orange-100 text-orange-800"
+      if (type === "buttons") return "bg-green-100 text-green-800"   // зелёные кнопки
+
+      return "bg-gray-100 text-gray-800"
+    }
   if (loading) {
     return (
       <Card className="p-8 text-center">

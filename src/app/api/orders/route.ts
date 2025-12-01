@@ -19,6 +19,7 @@ export async function POST(req: Request) {
           customer_id: general.customer_id,
           product_name: general.product_name,
           quantity: general.quantity,
+          quantity_buttons: general.quantity_buttons,
           status: general.status,
           notes: general.notes,
           user_id: user_id,

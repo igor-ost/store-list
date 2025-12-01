@@ -12,6 +12,7 @@ import * as products from '@/service/services/products'
 import * as materials from '@/service/services/materials'
 import * as worklog from '@/service/services/worklog'
 import * as salaryReport from '@/service/services/salary-report'
+import * as ordersReport from '@/service/services/orders-report'
 export const Api = {
     auth,
     orders,
@@ -26,5 +27,6 @@ export const Api = {
     products,
     materials,
     worklog,
-    salaryReport
+    salaryReport,
+    ordersReport,
 };

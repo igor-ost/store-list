@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Package, Hash, ImageIcon } from "lucide-react"
+import { Calendar, User, Package, Hash, ImageIcon, Bubbles } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { OrderInfo } from "@/@types/orders-types"
 import { Api } from "@/service/api-clients"
@@ -144,6 +144,13 @@ export function OrderDetails({ id }: OrderDetailsProps) {
               <div>
                 <div className="text-xs text-muted-foreground">Количество</div>
                 <div className="font-medium text-foreground">{order.quantity} шт.</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg border border-border">
+              <Bubbles className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="text-xs text-muted-foreground">Количество Пуговиц</div>
+                <div className="font-medium text-foreground">{order.quantity_buttons} шт.</div>
               </div>
             </div>
           </div>

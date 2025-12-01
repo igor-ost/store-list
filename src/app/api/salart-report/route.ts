@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "../../../../prisma/prisma-client";
-
+import { prisma } from "../../../../prisma/prisma-client"
 
 interface DetailedWorkLog {
   id: string
@@ -9,11 +8,16 @@ interface DetailedWorkLog {
   productName: string
   workerId: string
   workerName: string
-  workType: "sewing" | "cutting"
+  workType: "sewing" | "cutting" | "buttons"
   quantity: number
   pricePerUnit: number
   totalPrice: number
   createdAt: string
+  requiredProducts: number
+  requiredButtons: number
+  totalSewing: number
+  totalCutting: number
+  totalButtons: number
 }
 
 export async function GET(request: NextRequest) {
@@ -39,9 +43,51 @@ export async function GET(request: NextRequest) {
       orderBy: [{ createdAt: "desc" }],
     })
 
+    const orderStatsMap = new Map<
+      string,
+      {
+        totalSewing: number
+        totalCutting: number
+        totalButtons: number
+      }
+    >()
+
+    // First pass: calculate totals per order
+    workLogs.forEach((log) => {
+      if (!orderStatsMap.has(log.orderId)) {
+        orderStatsMap.set(log.orderId, {
+          totalSewing: 0,
+          totalCutting: 0,
+          totalButtons: 0,
+        })
+      }
+      const stats = orderStatsMap.get(log.orderId)!
+
+      if (log.workType === "sewing") {
+        stats.totalSewing += log.quantity
+      } else if (log.workType === "cutting") {
+        stats.totalCutting += log.quantity
+      } else if (log.workType === "buttons") {
+        stats.totalButtons += log.quantity
+      }
+    })
+
     const detailedLogs: DetailedWorkLog[] = workLogs.map((log) => {
-      const pricePerUnit = log.workType === "sewing" ? log.order.sewing_price : log.order.cutting_price
+      let pricePerUnit = 0
+      if (log.workType === "sewing") {
+        pricePerUnit = log.order.sewing_price
+      } else if (log.workType === "cutting") {
+        pricePerUnit = log.order.cutting_price
+      }
+      // For buttons, pricePerUnit remains 0
+
       const totalPrice = log.quantity * pricePerUnit
+
+      const orderStats = orderStatsMap.get(log.orderId) || {
+        totalSewing: 0,
+        totalCutting: 0,
+        totalButtons: 0,
+      }
 
       return {
         id: log.id,
@@ -50,11 +96,16 @@ export async function GET(request: NextRequest) {
         productName: log.order.product_name,
         workerId: log.workerId,
         workerName: log.worker.name || "Unknown",
-        workType: log.workType as "sewing" | "cutting",
+        workType: log.workType as "sewing" | "cutting" | "buttons", // Include buttons in type
         quantity: log.quantity,
         pricePerUnit,
         totalPrice,
         createdAt: log.createdAt.toISOString(),
+        requiredProducts: log.order.quantity || 0,
+        requiredButtons: log.order.quantity_buttons || 0,
+        totalSewing: orderStats.totalSewing,
+        totalCutting: orderStats.totalCutting,
+        totalButtons: orderStats.totalButtons,
       }
     })
 

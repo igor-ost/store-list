@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Eye, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 

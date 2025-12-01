@@ -38,6 +38,7 @@ interface OrderFormData {
   product_type: string
   size: string
   quantity: number
+  quantity_buttons: number
   description: string
   status: string
   notes: string
@@ -93,6 +94,7 @@ export function OrderForm() {
     product_type: "summer",
     size: "",
     quantity: 1,
+    quantity_buttons: 1,
     description: "",
     status: "pending",
     notes: "",
@@ -481,6 +483,18 @@ export function OrderForm() {
                     min="1"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number.parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                 <div>
+                  <Label htmlFor="quantity">Количество (Пуговиц)</Label>
+                  <Input
+                    id="quantity_buttons"
+                    type="number"
+                    className="bg-white"
+                    min="1"
+                    value={formData.quantity_buttons}
+                    onChange={(e) => setFormData({ ...formData, quantity_buttons: Number.parseInt(e.target.value) })}
                     required
                   />
                 </div>

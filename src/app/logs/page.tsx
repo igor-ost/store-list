@@ -16,6 +16,7 @@ const workType = [
   {name: "Все типы работ",type: ""},
   {name: "Пошив",type: "sewing"},
   {name: "Крой",type: "cutting"},
+  {name: "Пуговицы",type: "buttons"},
 ]
 
 export default function JournalPage() {

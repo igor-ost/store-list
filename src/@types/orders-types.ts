@@ -76,6 +76,7 @@ export interface OrderInfo {
   status: "pending" | "in_progress" | "completed" | "cancelled"
   product_name: string
   quantity: number
+  quantity_buttons: number
   notes?: string
   image_urls: string[]
   customer: {

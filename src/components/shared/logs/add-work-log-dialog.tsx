@@ -31,6 +31,7 @@ interface AddWorkLogDialogProps {
 const workType = [
   {name: "Пошив",type: "sewing"},
   {name: "Крой",type: "cutting"},
+  {name: "Пуговицы",type: "buttons"},
 ]
 
 export default function AddWorkLogDialog({ isOpen, onClose, onSuccess }: AddWorkLogDialogProps) {
