@@ -3,11 +3,13 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Header } from "@/components/shared/header"
-import { FileText, DollarSign,ChevronRight } from "lucide-react"
+import { FileText, DollarSign, ChevronRight, FileSpreadsheet, Package, Box } from "lucide-react"
 import { SalaryReport } from "@/components/shared/salary-report"
 import { OrdersReport } from "@/components/shared/orders-report"
+import { MaterialsReportComponent } from "@/components/shared/materials-report"
 
-type ReportType = "salary" | "orders" | null
+
+type ReportType = "salary" | "orders" | "simple-salary" | "simple-orders" | "materials" | null
 
 const reports = [
   {
@@ -20,7 +22,6 @@ const reports = [
     borderColor: "border-green-200",
     available: true,
   },
-  
   {
     id: "orders" as const,
     title: "Отчёт по заказам",
@@ -29,6 +30,16 @@ const reports = [
     gradient: "from-orange-500 to-red-600",
     bgGradient: "from-orange-50 to-red-50",
     borderColor: "border-orange-200",
+    available: true,
+  },
+  {
+    id: "materials" as const,
+    title: "Отчёт по материалам",
+    description: "Информация о расходе материалов по заказам",
+    icon: Box,
+    gradient: "from-teal-500 to-teal-600",
+    bgGradient: "from-teal-50 to-teal-50",
+    borderColor: "border-teal-200",
     available: true,
   },
 ]
@@ -44,6 +55,10 @@ export default function ReportsPage() {
     return <OrdersReport onBack={() => setSelectedReport(null)} />
   }
 
+  if (selectedReport === "materials") {
+    return <MaterialsReportComponent onBack={() => setSelectedReport(null)} />
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       <Header active={"reports"} />
@@ -53,7 +68,7 @@ export default function ReportsPage() {
           <p className="text-lg text-muted-foreground">Выберите тип отчёта для просмотра детальной информации</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {reports.map((report) => {
             const Icon = report.icon
             return (
@@ -62,12 +77,10 @@ export default function ReportsPage() {
                 className={`relative overflow-hidden border-2 ${report.borderColor} ${report.available ? "cursor-pointer hover:shadow-xl" : "cursor-not-allowed opacity-60"} transition-all duration-300 group`}
                 onClick={() => report.available && setSelectedReport(report.id)}
               >
-                {/* Фоновый градиент */}
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${report.bgGradient} opacity-50 group-hover:opacity-70 transition-opacity`}
                 />
 
-                {/* Иконка-декор в углу */}
                 <div
                   className={`absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br ${report.gradient} opacity-10 rounded-full group-hover:scale-110 transition-transform`}
                 />
@@ -97,7 +110,6 @@ export default function ReportsPage() {
                   )}
                 </div>
 
-                {/* Анимированная граница при наведении */}
                 {report.available && (
                   <div
                     className={`absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r ${report.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}
@@ -107,7 +119,6 @@ export default function ReportsPage() {
             )
           })}
         </div>
-
       </main>
     </div>
   )

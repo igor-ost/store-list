@@ -17,9 +17,8 @@ import { toast } from "sonner"
 import { SelectWorkers } from "../select-workers"
 import { SelectWorkType } from "../select-work-type"
 import { Api } from "@/service/api-clients"
-import { WorkersListSuccessResponse } from "@/@types/workers-types"
-import { GetListSuccessResponse } from "@/@types/worklog-types"
-
+import type { WorkersListSuccessResponse } from "@/@types/workers-types"
+import type { GetListSuccessResponse } from "@/@types/worklog-types"
 
 interface AddWorkLogForOrderProps {
   isOpen: boolean
@@ -29,11 +28,10 @@ interface AddWorkLogForOrderProps {
 }
 
 const workType = [
-  {name: "Пошив",type: "sewing"},
-  {name: "Крой",type: "cutting"},
-  {name: "Пуговицы",type: "buttons"},
+  { name: "Пошив", type: "sewing" },
+  { name: "Крой", type: "cutting" },
+  { name: "Пуговицы", type: "buttons" },
 ]
-
 
 export default function AddWorkLogForOrder({ isOpen, onClose, orderId, onSuccess }: AddWorkLogForOrderProps) {
   const [workers, setWorkers] = useState<WorkersListSuccessResponse>([])
@@ -42,7 +40,7 @@ export default function AddWorkLogForOrder({ isOpen, onClose, orderId, onSuccess
 
   const [formData, setFormData] = useState({
     workerId: "",
-    workType: "sewing",
+    workType: "",
     quantity: "",
   })
 
@@ -53,25 +51,24 @@ export default function AddWorkLogForOrder({ isOpen, onClose, orderId, onSuccess
   }, [isOpen])
 
   const fetchWorkers = async () => {
-      setLoading(true)
-      try {
-        const response = await Api.workers.getList();
-        if(response){
-          setWorkers(response)
-        }
-      } catch (error) {
-        console.log(error)
-        toast.error(`Не удалось загрузить заказы: ${error}`)
-      }finally{
-        setLoading(false)
+    setLoading(true)
+    try {
+      const response = await Api.workers.getList()
+      if (response) {
+        setWorkers(response)
       }
+    } catch (error) {
+      console.log(error)
+      toast.error(`Не удалось загрузить заказы: ${error}`)
+    } finally {
+      setLoading(false)
+    }
   }
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.workerId || !formData.quantity) {
+    if (!formData.workerId || !formData.quantity || !formData.workType) {
       toast.error("Заполните все поля")
       return
     }
@@ -79,17 +76,17 @@ export default function AddWorkLogForOrder({ isOpen, onClose, orderId, onSuccess
     try {
       setSubmitting(true)
       const data = {
-          orderId,
-          workerId: formData.workerId,
-          workType: formData.workType,
-          quantity: Number.parseFloat(formData.quantity),
+        orderId,
+        workerId: formData.workerId,
+        workType: formData.workType,
+        quantity: Number.parseFloat(formData.quantity),
       }
       const response = await Api.worklog.create(data)
       if (response) {
         onSuccess(response)
         setFormData({
           workerId: "",
-          workType: "sewing",
+          workType: "",
           quantity: "",
         })
         toast.success("Запись добавлена")
@@ -116,14 +113,22 @@ export default function AddWorkLogForOrder({ isOpen, onClose, orderId, onSuccess
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="worker">Работник</Label>
-            <SelectWorkers value={formData.workerId} workers={workers}  onValueChange={(value) => setFormData({ ...formData, workerId: value })}/>
+            <SelectWorkers
+              value={formData.workerId}
+              workers={workers}
+              onValueChange={(value) => setFormData({ ...formData, workerId: value })}
+            />
           </div>
 
           <div>
             <Label htmlFor="workType">Тип работы</Label>
-            <SelectWorkType workType={workType} value={formData.workType} onValueChange={(value) => setFormData({ ...formData, workType: value })}/>
+            <SelectWorkType
+              workType={workType}
+              value={formData.workType}
+              onValueChange={(value) => setFormData({ ...formData, workType: value })}
+            />
           </div>
-          
+
           <div>
             <Label htmlFor="quantity">Количество</Label>
             <Input

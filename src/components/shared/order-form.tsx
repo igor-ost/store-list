@@ -385,16 +385,6 @@ export function OrderForm() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="order_number">Номер заказа</Label>
-                  <Input
-                    id="order_number"
-                    className="bg-white"
-                    value={formData.order_number}
-                    onChange={(e) => setFormData({ ...formData, order_number: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
                   <Label htmlFor="order_date">Дата заказа</Label>
                   <Input
                     id="order_date"

@@ -1,6 +1,7 @@
+/* eslint-disable */
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -58,42 +59,168 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
     }
   }
 
-  const handleFilter = () => {
+  const handleFilter = useCallback(() => {
     fetchReports(selectedMonth, selectedWorker)
-  }
+  }, [selectedMonth, selectedWorker])
 
   const getOrderStatus = (log: GetListSuccessResponse): string => {
     const { requiredProducts, totalSewing, totalCutting } = log
-    // Check if any work exceeds required amount
     if (totalSewing > requiredProducts || totalCutting > requiredProducts) {
       return "Перевыполнено"
     }
-    // Check if all work is completed
     if (totalSewing === requiredProducts && totalCutting === requiredProducts) {
       return "Выполнен"
     }
-    // Otherwise it's not completed
     return "Не завершено"
   }
 
-  const handleExcelExport = async () => {
+  const handleExcelExport = useCallback(async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const workbookData: any[] = []
-      workbookData.push(["ОТЧЕТ О ЗАРПЛАТЕ"])
-      workbookData.push(["Дата генерации:", new Date().toLocaleDateString("ru-RU")])
-      workbookData.push([])
-      workbookData.push(["ИТОГОВАЯ СТАТИСТИКА"])
+      const wb = XLSX.utils.book_new()
+
+      const simpleData: any[] = []
+
+      simpleData.push(["ОТЧЁТ О ЗАРПЛАТЕ СОТРУДНИКОВ"])
+      simpleData.push([])
+      simpleData.push(["Дата формирования:", new Date().toLocaleDateString("ru-RU")])
+      simpleData.push([])
+
+      const groupedByWorkerMonth = workLogs.reduce(
+        (acc, log) => {
+          if (log.workType === "buttons") return acc
+
+          const month = log.createdAt.split("T")[0].slice(0, 7)
+          const key = `${log.workerId}-${month}`
+
+          if (!acc[key]) {
+            acc[key] = {
+              workerName: log.workerName,
+              month,
+              salary: 0,
+            }
+          }
+          acc[key].salary += log.totalPrice
+          return acc
+        },
+        {} as Record<string, any>,
+      )
+
+      simpleData.push(["ФИО", "Должность", "Зарплата", "Период"])
+
+      Object.values(groupedByWorkerMonth).forEach((data: any) => {
+        const monthName = new Date(data.month + "-01").toLocaleDateString("ru-RU", {
+          month: "long",
+          year: "numeric",
+        })
+        simpleData.push([
+          data.workerName,
+          "Швея",
+          `${data.salary.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸`,
+          monthName,
+        ])
+      })
+
+      simpleData.push([])
+
+      const totalSalarySum = Object.values(groupedByWorkerMonth).reduce(
+        (sum: number, data: any) => sum + data.salary,
+        0,
+      )
+      simpleData.push(["ИТОГО:", "", `${totalSalarySum.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸`, ""])
+
+      const ws1 = XLSX.utils.aoa_to_sheet(simpleData)
+
+      ws1["!cols"] = [{ wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 25 }]
+
+      const range1 = XLSX.utils.decode_range(ws1["!ref"] || "A1")
+      for (let R = range1.s.r; R <= range1.e.r; ++R) {
+        for (let C = range1.s.c; C <= range1.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_col(C) + (R + 1)
+          if (!ws1[cellAddress]) continue
+
+          if (R === 0) {
+            ws1[cellAddress].s = {
+              font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } },
+              fill: { fgColor: { rgb: "059669" } },
+              alignment: { horizontal: "center", vertical: "center" },
+            }
+          }
+
+          if (R === 2 && C === 0) {
+            ws1[cellAddress].s = {
+              font: { bold: true, sz: 11 },
+            }
+          }
+
+          if (R === 4) {
+            ws1[cellAddress].s = {
+              font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+              fill: { fgColor: { rgb: "10B981" } },
+              alignment: { horizontal: "center", vertical: "center" },
+              border: {
+                top: { style: "medium", color: { rgb: "000000" } },
+                bottom: { style: "medium", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } },
+              },
+            }
+          }
+
+          if (R > 4 && R < range1.e.r) {
+            ws1[cellAddress].s = {
+              font: { sz: 11 },
+              alignment: {
+                horizontal: C === 0 ? "left" : C === 2 ? "right" : "center",
+                vertical: "center",
+              },
+              border: {
+                top: { style: "thin", color: { rgb: "CCCCCC" } },
+                bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                left: { style: "thin", color: { rgb: "CCCCCC" } },
+                right: { style: "thin", color: { rgb: "CCCCCC" } },
+              },
+            }
+
+            if ((R - 5) % 2 === 0) {
+              ws1[cellAddress].s.fill = { fgColor: { rgb: "F0FDF4" } }
+            }
+          }
+
+          if (simpleData[R]?.[0] === "ИТОГО:") {
+            ws1[cellAddress].s = {
+              font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+              fill: { fgColor: { rgb: "059669" } },
+              alignment: { horizontal: C === 2 ? "right" : "center", vertical: "center" },
+              border: {
+                top: { style: "medium", color: { rgb: "000000" } },
+                bottom: { style: "medium", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } },
+              },
+            }
+          }
+        }
+      }
+
+      ws1["!rows"] = [{ hpt: 30 }, { hpt: 5 }, { hpt: 20 }, { hpt: 5 }, { hpt: 25 }]
+
+      XLSX.utils.book_append_sheet(wb, ws1, "Сводка по зарплате")
+
+      const detailedData: any[] = []
+      detailedData.push(["ДЕТАЛЬНЫЙ ОТЧЁТ О ВЫПОЛНЕННЫХ РАБОТАХ"])
+      detailedData.push(["Дата генерации:", new Date().toLocaleDateString("ru-RU")])
+      detailedData.push([])
+      detailedData.push(["ИТОГОВАЯ СТАТИСТИКА"])
 
       const paidWorkLogs = workLogs.filter((log) => log.workType !== "buttons")
       const totalSalary = paidWorkLogs.reduce((sum, log) => sum + log.totalPrice, 0)
       const totalCompleted = paidWorkLogs.length
       const uniqueWorkers = new Set(paidWorkLogs.map((log) => log.workerId)).size
 
-      workbookData.push(["Всего выплачено:", `₸${totalSalary.toFixed(2)}`])
-      workbookData.push(["Выполнено работ:", totalCompleted])
-      workbookData.push(["Работников:", uniqueWorkers])
-      workbookData.push([])
+      detailedData.push(["Всего выплачено:", `₸${totalSalary.toFixed(2)}`])
+      detailedData.push(["Выполнено работ:", totalCompleted])
+      detailedData.push(["Работников:", uniqueWorkers])
+      detailedData.push([])
 
       const groupedData = workLogs.reduce(
         (acc, log) => {
@@ -114,15 +241,14 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
           }
           return acc
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {} as Record<string, any>,
       )
 
       Object.entries(groupedData).forEach(([key, data]) => {
-        workbookData.push([
+        detailedData.push([
           `${data.workerName} - ${new Date(data.month + "-01").toLocaleDateString("ru-RU", { month: "long", year: "numeric" })}`,
         ])
-        workbookData.push([
+        detailedData.push([
           "Дата",
           "Заказ",
           "Продукт",
@@ -139,7 +265,7 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
         ])
 
         data.logs.forEach((log: GetListSuccessResponse) => {
-          workbookData.push([
+          detailedData.push([
             new Date(log.createdAt).toLocaleDateString("ru-RU"),
             log.orderNumber,
             log.productName,
@@ -156,43 +282,43 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
           ])
         })
 
-        workbookData.push(["Итого:", "", "", "", "", "", data.total.toFixed(2), "", "", "", "", "", ""])
-        workbookData.push([])
+        detailedData.push(["Итого:", "", "", "", "", "", data.total.toFixed(2), "", "", "", "", "", ""])
+        detailedData.push([])
       })
 
-      const ws = XLSX.utils.aoa_to_sheet(workbookData)
-      ws["!cols"] = [
-        { wch: 15 }, // Дата
-        { wch: 12 }, // Заказ
-        { wch: 25 }, // Продукт
-        { wch: 15 }, // Тип работы
-        { wch: 10 }, // Кол-во
-        { wch: 12 }, // Цена/ед.
-        { wch: 12 }, // Сумма
-        { wch: 18 }, // Изделий требуемых
-        { wch: 18 }, // Требуется пуговок
-        { wch: 18 }, // Пошивов по заказу
-        { wch: 16 }, // Кроев по заказу
-        { wch: 18 }, // Пуговок по заказу
-        { wch: 15 }, // Статус
+      const ws2 = XLSX.utils.aoa_to_sheet(detailedData)
+      ws2["!cols"] = [
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 15 },
       ]
 
-      const range = XLSX.utils.decode_range(ws["!ref"] || "A1")
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
+      const range2 = XLSX.utils.decode_range(ws2["!ref"] || "A1")
+      for (let R = range2.s.r; R <= range2.e.r; ++R) {
+        for (let C = range2.s.c; C <= range2.e.c; ++C) {
           const cellAddress = XLSX.utils.encode_col(C) + (R + 1)
-          if (!ws[cellAddress]) continue
+          if (!ws2[cellAddress]) continue
 
-          ws[cellAddress].z = ws[cellAddress].z || "0.00"
+          ws2[cellAddress].z = ws2[cellAddress].z || "0.00"
 
           if (R === 0) {
-            ws[cellAddress].font = { bold: true, size: 14, color: { rgb: "FFFFFF" } }
-            ws[cellAddress].fill = { fgColor: { rgb: "1F2937" } }
+            ws2[cellAddress].font = { bold: true, size: 14, color: { rgb: "FFFFFF" } }
+            ws2[cellAddress].fill = { fgColor: { rgb: "1F2937" } }
           }
 
-          if (workbookData[R]?.[0]?.includes?.("ИТОГОВАЯ") || workbookData[R]?.[0]?.includes?.("-")) {
-            ws[cellAddress].font = { bold: true, size: 11, color: { rgb: "FFFFFF" } }
-            ws[cellAddress].fill = { fgColor: { rgb: "4B5563" } }
+          if (detailedData[R]?.[0]?.includes?.("ИТОГОВАЯ") || detailedData[R]?.[0]?.includes?.("-")) {
+            ws2[cellAddress].font = { bold: true, size: 11, color: { rgb: "FFFFFF" } }
+            ws2[cellAddress].fill = { fgColor: { rgb: "4B5563" } }
           }
 
           if (
@@ -211,23 +337,23 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
               "Кроев по заказу",
               "Пуговок по заказу",
               "Статус",
-            ].includes(workbookData[R]?.[C])
+            ].includes(detailedData[R]?.[C])
           ) {
-            ws[cellAddress].font = { bold: true, color: { rgb: "FFFFFF" } }
-            ws[cellAddress].fill = { fgColor: { rgb: "5B7C99" } }
-            ws[cellAddress].alignment = { horizontal: "center" }
+            ws2[cellAddress].font = { bold: true, color: { rgb: "FFFFFF" } }
+            ws2[cellAddress].fill = { fgColor: { rgb: "5B7C99" } }
+            ws2[cellAddress].alignment = { horizontal: "center" }
           }
 
-          if (workbookData[R]?.[0]?.includes?.("Итого:")) {
-            ws[cellAddress].font = { bold: true, color: { rgb: "FFFFFF" } }
-            ws[cellAddress].fill = { fgColor: { rgb: "10B981" } }
+          if (detailedData[R]?.[0]?.includes?.("Итого:")) {
+            ws2[cellAddress].font = { bold: true, color: { rgb: "FFFFFF" } }
+            ws2[cellAddress].fill = { fgColor: { rgb: "10B981" } }
           }
 
           if (C >= 4 && R > 2) {
-            ws[cellAddress].alignment = { horizontal: "right" }
+            ws2[cellAddress].alignment = { horizontal: "right" }
           }
 
-          ws[cellAddress].border = {
+          ws2[cellAddress].border = {
             top: { style: "thin" },
             bottom: { style: "thin" },
             left: { style: "thin" },
@@ -236,41 +362,44 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
         }
       }
 
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, "Отчет")
+      XLSX.utils.book_append_sheet(wb, ws2, "Детальный отчёт")
+
       XLSX.writeFile(wb, `salary-report-${new Date().toISOString().split("T")[0]}.xlsx`)
+      toast.success("Отчёт успешно экспортирован!")
     } catch (error) {
       console.error("Error exporting to Excel:", error)
+      toast.error("Ошибка при экспорте отчёта")
     }
-  }
+  }, [workLogs])
 
-  const paidWorkLogs = workLogs.filter((log) => log.workType !== "buttons")
-  const groupedData = workLogs.reduce(
-    (acc, log) => {
-      const month = log?.createdAt?.split("T")[0].slice(0, 7)
-      const key = `${log.workerName}-${month}`
-      if (!acc[key]) {
-        acc[key] = {
-          workerName: log.workerName,
-          workerId: log.workerId,
-          month,
-          logs: [],
-          total: 0,
+  const paidWorkLogs = useMemo(() => workLogs.filter((log) => log.workType !== "buttons"), [workLogs])
+  const groupedData = useMemo(() => {
+    return workLogs.reduce(
+      (acc, log) => {
+        const month = log?.createdAt?.split("T")[0].slice(0, 7)
+        const key = `${log.workerName}-${month}`
+        if (!acc[key]) {
+          acc[key] = {
+            workerName: log.workerName,
+            workerId: log.workerId,
+            month,
+            logs: [],
+            total: 0,
+          }
         }
-      }
-      acc[key].logs.push(log)
-      if (log.workType !== "buttons") {
-        acc[key].total += log.totalPrice
-      }
-      return acc
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    {} as Record<string, any>,
-  )
+        acc[key].logs.push(log)
+        if (log.workType !== "buttons") {
+          acc[key].total += log.totalPrice
+        }
+        return acc
+      },
+      {} as Record<string, any>,
+    )
+  }, [workLogs])
 
-  const totalSalary = paidWorkLogs.reduce((sum, log) => sum + log.totalPrice, 0)
-  const totalCompleted = paidWorkLogs.length
-  const uniqueWorkers = new Set(paidWorkLogs.map((log) => log.workerId)).size
+  const totalSalary = useMemo(() => paidWorkLogs.reduce((sum, log) => sum + log.totalPrice, 0), [paidWorkLogs])
+  const totalCompleted = useMemo(() => paidWorkLogs.length, [paidWorkLogs])
+  const uniqueWorkers = useMemo(() => new Set(paidWorkLogs.map((log) => log.workerId)).size, [paidWorkLogs])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -281,12 +410,11 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
             Назад к выбору отчётов
           </Button>
           <h1 className="text-3xl font-bold text-white mb-2">Расчёт зарплаты</h1>
-          <p className="text-green-50">Подробный отчет о заработной плате по выполненным работам</p>
+          <p className="text-green-100">Подробный отчет о заработной плате по выполненным работам</p>
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Фильтры */}
         <Card className="p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
@@ -318,14 +446,13 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
                 Сбросить
               </Button>
             </div>
-            <Button variant="outline" onClick={handleExcelExport} className="gap-2 bg-transparent">
+            <Button variant="outline" onClick={handleExcelExport} className="gap-2 bg-green-50 hover:bg-green-100">
               <Download className="w-4 h-4" />
               Скачать Отчёт
             </Button>
           </div>
         </Card>
 
-        {/* Основная статистика */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <p className="text-sm text-green-700 font-medium mb-2">Всего выплачено</p>
@@ -352,7 +479,6 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
           </Card>
         </div>
 
-        {/* Детальный отчет */}
         {loading ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">Загрузка...</p>
@@ -366,7 +492,7 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
             {Object.entries(groupedData).map(([key, data]) => (
               <Card key={key} className="overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-border cursor-pointer hover:bg-slate-100 transition-colors"
+                  className="bg-muted px-6 py-4 border-b border-border cursor-pointer hover:bg-muted/80 transition-colors"
                   onClick={() => setExpandedWorker(expandedWorker === key ? null : key)}
                 >
                   <div className="flex items-center justify-between">
@@ -380,122 +506,87 @@ export function SalaryReport({ onBack }: SalaryReportProps) {
                       </p>
                     </div>
                     <div className="text-right mr-4">
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-sm text-muted-foreground">Итого за месяц</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {data.total.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {data.logs.length} {data.logs.length === 1 ? "работа" : "работ"}
-                      </p>
                     </div>
-                    <div className="text-muted-foreground">
-                      {expandedWorker === key ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </div>
+                    {expandedWorker === key ? (
+                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    )}
                   </div>
                 </div>
 
-                {/* Детали работ */}
                 {expandedWorker === key && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b border-border bg-muted/50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Дата</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Заказ</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Продукт</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Тип</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Кол-во</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Цена/ед.</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Сумма</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Изделий треб.</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Треб. пуговок</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Пошивов</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Кроев</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Пуговок</th>
-                          <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">Статус</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {data.logs.map((log: GetListSuccessResponse) => (
-                          <tr key={log.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="px-6 py-4 text-sm text-foreground">
-                              {new Date(log.createdAt).toLocaleDateString("ru-RU")}
-                            </td>
-                            <td className="px-6 py-4">
-                              <a
-                                href={`/orders/details/${log.orderId}`}
-                                className="text-blue-600 hover:underline font-medium"
-                              >
-                                {log.orderNumber}
-                              </a>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">{log.productName}</td>
-                            <td className="px-6 py-4">
-                              <Badge
-                                className={
-                                  log.workType === "sewing"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : log.workType === "cutting"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : "bg-green-100 text-green-800"
-                                }
-                              >
-                                {log.workType === "sewing" ? "Пошив" : log.workType === "cutting" ? "Крой" : "Пуговицы"}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">{log.quantity}</td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.workType === "buttons"
-                                ? "—"
-                                : `${log.pricePerUnit.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸`}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-bold text-green-600">
-                              {log.workType === "buttons"
-                                ? "—"
-                                : `${log.totalPrice.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸`}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.requiredProducts.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.requiredButtons.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.totalSewing.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.totalCutting.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                              {log.totalButtons.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <Badge
-                                className={
-                                  getOrderStatus(log) === "Выполнен"
-                                    ? "bg-green-100 text-green-800"
-                                    : getOrderStatus(log) === "Перевыполнено"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-yellow-100 text-yellow-800"
-                                }
-                              >
-                                {getOrderStatus(log)}
-                              </Badge>
-                            </td>
+                  <div className="p-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Дата</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Заказ</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Продукт</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Тип работы</th>
+                            <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">Кол-во</th>
+                            <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">Цена/ед.</th>
+                            <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">Сумма</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-foreground">Статус</th>
                           </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="border-t-2 border-border bg-muted/50">
-                        <tr>
-                          <td colSpan={6} className="px-6 py-4 text-right font-semibold text-foreground">
-                            Итого за месяц:
-                          </td>
-                          <td className="px-6 py-4 text-right text-lg font-bold text-green-600">
-                            {data.total.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₸
-                          </td>
-                          <td colSpan={6}></td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {data.logs.map((log: GetListSuccessResponse, idx: number) => (
+                            <tr key={idx} className="hover:bg-muted/50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-foreground">
+                                {new Date(log.createdAt).toLocaleDateString("ru-RU")}
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-foreground">{log.orderNumber}</td>
+                              <td className="px-4 py-3 text-sm text-foreground">{log.productName}</td>
+                              <td className="px-4 py-3">
+                                <Badge
+                                  variant={
+                                    log.workType === "sewing"
+                                      ? "default"
+                                      : log.workType === "cutting"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                >
+                                  {log.workType === "sewing"
+                                    ? "Пошив"
+                                    : log.workType === "cutting"
+                                      ? "Крой"
+                                      : "Пуговицы"}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3 text-right text-sm font-medium text-foreground">
+                                {log.quantity}
+                              </td>
+                              <td className="px-4 py-3 text-right text-sm text-muted-foreground">
+                                {log.workType === "buttons" ? "-" : `${log.pricePerUnit.toFixed(2)} ₸`}
+                              </td>
+                              <td className="px-4 py-3 text-right text-sm font-bold text-foreground">
+                                {log.workType === "buttons" ? "-" : `${log.totalPrice.toFixed(2)} ₸`}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <Badge
+                                  variant={
+                                    getOrderStatus(log) === "Выполнен"
+                                      ? "default"
+                                      : getOrderStatus(log) === "Перевыполнено"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                >
+                                  {getOrderStatus(log)}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </Card>

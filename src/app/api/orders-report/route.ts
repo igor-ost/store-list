@@ -1,8 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "../../../../prisma/prisma-client"
 
-
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -64,7 +62,6 @@ export async function GET(request: NextRequest) {
     })
 
     const detailedOrders = orders.map((order) => {
-
       let totalSewing = 0
       let totalCutting = 0
       let totalButtons = 0

@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Download, Filter, ChevronDown, ChevronUp, ArrowLeft, Package } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Api } from "@/service/api-clients"
-import { OrderReport } from "@/@types/orders-report-types"
-
-
+import type { OrderReport } from "@/@types/orders-report-types"
 
 interface OrdersReportProps {
   onBack: () => void
@@ -26,11 +24,11 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
     fetchOrders()
   }, [])
 
-  const fetchOrders = async (month?: string, status?: string) => {
+  const fetchOrders = useCallback(async (month?: string, status?: string) => {
     try {
-      setLoading(true);
+      setLoading(true)
       const response = await Api.ordersReport.getList({ status, month })
-      if (response){
+      if (response) {
         setOrders(response)
       }
     } catch (error) {
@@ -38,11 +36,11 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleFilter = () => {
+  const handleFilter = useCallback(() => {
     fetchOrders(selectedMonth, selectedStatus)
-  }
+  }, [selectedMonth, selectedStatus, fetchOrders])
 
   const statistics = useMemo(() => {
     return {
@@ -86,27 +84,71 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
     return typeMap[type] || type
   }
 
-  const handleExcelExport = () => {
+  const handleExcelExport = useCallback(() => {
     try {
-      const workbookData: (string | number | boolean)[][] = []
+      const wb = XLSX.utils.book_new()
 
-      workbookData.push(["ПОЛНЫЙ ОТЧЁТ ПО ЗАКАЗАМ"])
-      workbookData.push(["Дата генерации:", new Date().toLocaleDateString("ru-RU")])
-      workbookData.push([])
+      const simpleData: (string | number)[][] = []
 
-      workbookData.push(["ИТОГОВАЯ СТАТИСТИКА"])
-      workbookData.push(["Общая выручка (₸):", statistics.totalRevenue.toFixed(2)])
-      workbookData.push(["Всего заказов:", statistics.totalOrders])
-      workbookData.push(["Завершено:", statistics.completedCount])
-      workbookData.push(["В работе:", statistics.inProgressCount])
-      workbookData.push(["Ожидает:", statistics.pendingCount])
-      workbookData.push(["Перепроизведено:", statistics.overproducedCount])
-      workbookData.push(["Изделий произведено:", statistics.totalItemsProduced])
-      workbookData.push(["Изделий требуется:", statistics.totalItemsRequired])
-      workbookData.push([])
+      simpleData.push(["УПРОЩЁННЫЙ ОТЧЁТ ПО ЗАКАЗАМ"])
+      simpleData.push(["Дата генерации:", new Date().toLocaleDateString("ru-RU")])
+      simpleData.push([])
 
-      // Main orders table
-      workbookData.push([
+      simpleData.push([
+        "Номер заказа",
+        "Продукт",
+        "Требуется изделий",
+        "Требуется пуговок",
+        "Пошив по заказу",
+        "Крой по заказу",
+        "Пуговицы",
+        "Статус",
+      ])
+
+      orders.forEach((order) => {
+        simpleData.push([
+          order.orderNumber,
+          order.productName,
+          order.quantity,
+          order.quantityButtons,
+          order.totalSewing,
+          order.totalCutting,
+          order.totalButtons,
+          getStatusText(order.status),
+        ])
+      })
+
+      simpleData.push([])
+      simpleData.push(["ИТОГОВАЯ СТАТИСТИКА"])
+      simpleData.push(["Всего заказов:", statistics.totalOrders])
+      simpleData.push(["Завершено:", statistics.completedCount])
+      simpleData.push(["В работе:", statistics.inProgressCount])
+      simpleData.push(["Ожидает:", statistics.pendingCount])
+      simpleData.push(["Изделий произведено:", statistics.totalItemsProduced])
+      simpleData.push(["Изделий требуется:", statistics.totalItemsRequired])
+
+      const wsSimple = XLSX.utils.aoa_to_sheet(simpleData)
+      wsSimple["!cols"] = [{ wch: 18 }, { wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 15 }]
+      XLSX.utils.book_append_sheet(wb, wsSimple, "Простой отчёт")
+
+      const detailedData: (string | number | boolean)[][] = []
+
+      detailedData.push(["ПОЛНЫЙ ДЕТАЛЬНЫЙ ОТЧЁТ ПО ЗАКАЗАМ"])
+      detailedData.push(["Дата генерации:", new Date().toLocaleDateString("ru-RU")])
+      detailedData.push([])
+
+      detailedData.push(["ИТОГОВАЯ СТАТИСТИКА"])
+      detailedData.push(["Общая выручка (₸):", statistics.totalRevenue.toFixed(2)])
+      detailedData.push(["Всего заказов:", statistics.totalOrders])
+      detailedData.push(["Завершено:", statistics.completedCount])
+      detailedData.push(["В работе:", statistics.inProgressCount])
+      detailedData.push(["Ожидает:", statistics.pendingCount])
+      detailedData.push(["Перепроизведено:", statistics.overproducedCount])
+      detailedData.push(["Изделий произведено:", statistics.totalItemsProduced])
+      detailedData.push(["Изделий требуется:", statistics.totalItemsRequired])
+      detailedData.push([])
+
+      detailedData.push([
         "Номер заказа",
         "Клиент",
         "БИН",
@@ -126,7 +168,7 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
       ])
 
       orders.forEach((order) => {
-        workbookData.push([
+        detailedData.push([
           order.orderNumber,
           order.clientName,
           order.clientBin,
@@ -145,7 +187,6 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
           order.quantityButtons,
         ])
 
-        // Add materials section
         if (
           order.zippers.length > 0 ||
           order.threads.length > 0 ||
@@ -154,46 +195,63 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
           order.accessories.length > 0 ||
           order.velcro.length > 0
         ) {
-          workbookData.push(["МАТЕРИАЛЫ ДЛЯ " + order.orderNumber])
+          detailedData.push(["МАТЕРИАЛЫ ДЛЯ " + order.orderNumber])
           if (order.zippers.length > 0) {
-            workbookData.push(["Молнии:"])
+            detailedData.push(["Молнии:"])
             order.zippers.forEach((z) => {
-              workbookData.push(["", z.type, z.color || "", z.qty, z.price || ""])
+              detailedData.push(["", z.type, z.color || "", z.qty, z.price || ""])
             })
           }
           if (order.threads.length > 0) {
-            workbookData.push(["Нитки:"])
+            detailedData.push(["Нитки:"])
             order.threads.forEach((t) => {
-              workbookData.push(["", t.type, t.color || "", t.qty, t.price || ""])
+              detailedData.push(["", t.type, t.color || "", t.qty, t.price || ""])
             })
           }
           if (order.fabrics.length > 0) {
-            workbookData.push(["Ткани:"])
+            detailedData.push(["Ткани:"])
             order.fabrics.forEach((f) => {
-              workbookData.push(["", f.type, f.color || "", f.qty, f.price || ""])
+              detailedData.push(["", f.type, f.color || "", f.qty, f.price || ""])
             })
           }
-          workbookData.push([])
+          if (order.buttons.length > 0) {
+            detailedData.push(["Пуговицы:"])
+            order.buttons.forEach((b) => {
+              detailedData.push(["", b.type, b.color || "", b.qty, b.price || ""])
+            })
+          }
+          if (order.accessories.length > 0) {
+            detailedData.push(["Аксессуары:"])
+            order.accessories.forEach((a) => {
+              detailedData.push(["", "", a.qty, a.price || ""])
+            })
+          }
+          if (order.velcro.length > 0) {
+            detailedData.push(["Липучки:"])
+            order.velcro.forEach((v) => {
+              detailedData.push(["", "", v.qty, v.price || ""])
+            })
+          }
+          detailedData.push([])
         }
 
-        // Add work logs
         if (order.workLogs.length > 0) {
-          workbookData.push(["ИСТОРИЯ РАБОТ ДЛЯ " + order.orderNumber])
-          workbookData.push(["Дата", "Тип работы", "Количество", "Работник"])
+          detailedData.push(["ИСТОРИЯ РАБОТ ДЛЯ " + order.orderNumber])
+          detailedData.push(["Дата", "Тип работы", "Количество", "Работник"])
           order.workLogs.forEach((log) => {
-            workbookData.push([
+            detailedData.push([
               new Date(log.createdAt).toLocaleString("ru-RU"),
               getWorkTypeText(log.workType),
               log.quantity,
               log.workerName,
             ])
           })
-          workbookData.push([])
+          detailedData.push([])
         }
       })
 
-      const ws = XLSX.utils.aoa_to_sheet(workbookData)
-      ws["!cols"] = [
+      const wsDetailed = XLSX.utils.aoa_to_sheet(detailedData)
+      wsDetailed["!cols"] = [
         { wch: 18 },
         { wch: 20 },
         { wch: 15 },
@@ -211,13 +269,13 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
         { wch: 12 },
         { wch: 15 },
       ]
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, "Отчёт")
+      XLSX.utils.book_append_sheet(wb, wsDetailed, "Полный отчёт")
+
       XLSX.writeFile(wb, `order-report-${new Date().toISOString().split("T")[0]}.xlsx`)
     } catch (error) {
       console.error("Error exporting Excel:", error)
     }
-  }
+  }, [orders, statistics])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -227,13 +285,12 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Назад к выбору отчётов
           </Button>
-          <h1 className="text-3xl font-bold text-white mb-2">Полный отчёт по заказам</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Отчёт по заказам</h1>
           <p className="text-orange-100">Детальная информация о заказах, материалах и производстве</p>
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Фильтры */}
         <Card className="p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
@@ -275,14 +332,13 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
                 Сбросить
               </Button>
             </div>
-            <Button variant="outline" onClick={handleExcelExport} className="gap-2 bg-transparent">
+            <Button variant="outline" onClick={handleExcelExport} className="gap-2 bg-orange-50 hover:bg-orange-100">
               <Download className="w-4 h-4" />
               Скачать Отчёт
             </Button>
           </div>
         </Card>
 
-        {/* Основная статистика */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <p className="text-sm text-green-700 font-medium mb-2">Общая выручка</p>
@@ -311,7 +367,6 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
           </Card>
         </div>
 
-        {/* Детальный отчет */}
         {loading ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">Загрузка...</p>
@@ -322,230 +377,161 @@ export function OrdersReport({ onBack }: OrdersReportProps) {
             <p className="text-muted-foreground text-lg">Нет данных для отображения</p>
           </Card>
         ) : (
-          <div className="overflow-x-auto">
-
-                {orders.map((order,index) => (
-                  <div key={index} className="w-full bg-white p-2">
-                    <tr
-                      key={order.id}
-                      className="hover:bg-muted/50 transition-colors cursor-pointer w-full"
-                      onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-foreground">{order.orderNumber}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{order.clientName}</td>
-                      <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">{order.productName}</td>
-                      <td className="px-6 py-4 text-sm text-foreground">
-                        {new Date(order.createdAt).toLocaleDateString("ru-RU")}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-foreground">{order.quantity}</td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                        {order.completedProducts}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                        {order.productionProgress.toFixed(0)}%
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                        {order.cuttingPrice.toLocaleString("ru-RU")} ₸
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium text-foreground">
-                        {order.sewingPrice.toLocaleString("ru-RU")} ₸
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-bold text-green-600">
-                        {order.totalCost.toLocaleString("ru-RU")} ₸
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {expandedOrder === order.id ? (
-                          <ChevronUp className="w-5 h-5" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5" />
-                        )}
-                      </td>
-                    </tr>
-                    {expandedOrder === order.id && (
-                      <tr>
-                        <td colSpan={12}>
-                          <div className="bg-white p-6 space-y-6">
-                            {/* Basic info */}
-                            <div>
-                              <h4 className="font-semibold text-foreground mb-4">Основная информация</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">БИН клиента</p>
-                                  <p className="font-medium text-foreground">{order.clientBin}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">Требуемых пуговок</p>
-                                  <p className="font-medium text-foreground">{order.quantityButtons}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">Дата создания</p>
-                                  <p className="font-medium text-foreground">
-                                    {new Date(order.createdAt).toLocaleString("ru-RU")}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Production stats */}
-                            <div className="border-t pt-4">
-                              <h4 className="font-semibold text-foreground mb-4">Статистика производства</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">Всего пошивов</p>
-                                  <p className="text-xl font-bold text-blue-600">{order.totalSewing}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">Всего кроев</p>
-                                  <p className="text-xl font-bold text-orange-600">{order.totalCutting}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">Всего пуговок</p>
-                                  <p className="text-xl font-bold text-green-600">{order.totalButtons}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground mb-1">% Выполнения</p>
-                                  <p className="text-xl font-bold text-purple-600">
-                                    {order.productionProgress.toFixed(0)}%
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Materials */}
-                            {(order.zippers.length > 0 ||
-                              order.threads.length > 0 ||
-                              order.buttons.length > 0 ||
-                              order.fabrics.length > 0 ||
-                              order.accessories.length > 0 ||
-                              order.velcro.length > 0) && (
-                              <div className="border-t pt-4">
-                                <h4 className="font-semibold text-foreground mb-4">Материалы</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {order.zippers.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Молнии</p>
-                                      {order.zippers.map((z) => (
-                                        <p key={z.id} className="text-xs text-muted-foreground">
-                                          {z.type} {z.color ? `(${z.color})` : ""} - {z.qty} шт.{" "}
-                                          {z.price ? `(${z.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {order.threads.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Нитки</p>
-                                      {order.threads.map((t) => (
-                                        <p key={t.id} className="text-xs text-muted-foreground">
-                                          {t.type} {t.color ? `(${t.color})` : ""} - {t.qty} шт.{" "}
-                                          {t.price ? `(${t.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {order.fabrics.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Ткани</p>
-                                      {order.fabrics.map((f) => (
-                                        <p key={f.id} className="text-xs text-muted-foreground">
-                                          {f.name} {f.color ? `(${f.color})` : ""} - {f.qty} шт.{" "}
-                                          {f.price ? `(${f.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {order.buttons.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Пуговицы</p>
-                                      {order.buttons.map((b) => (
-                                        <p key={b.id} className="text-xs text-muted-foreground">
-                                          {b.type} {b.color ? `(${b.color})` : ""} - {b.qty} шт.{" "}
-                                          {b.price ? `(${b.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {order.accessories.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Аксессуары</p>
-                                      {order.accessories.map((a) => (
-                                        <p key={a.id} className="text-xs text-muted-foreground">
-                                          {a.name} - {a.qty} шт. {a.price ? `(${a.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {order.velcro.length > 0 && (
-                                    <div className="bg-slate-50 p-4 rounded-md">
-                                      <p className="text-sm font-semibold text-foreground mb-2">Велкро</p>
-                                      {order.velcro.map((v) => (
-                                        <p key={v.id} className="text-xs text-muted-foreground">
-                                          {v.name} - {v.qty} шт. {v.price ? `(${v.price} ₸)` : ""}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Work logs */}
-                            {order.workLogs.length > 0 && (
-                              <div className="border-t pt-4">
-                                <h4 className="font-semibold text-foreground mb-4">
-                                  История работ ({order.workLogs.length})
-                                </h4>
-                                <div className="overflow-x-auto">
-                                  <table className="w-full text-sm">
-                                    <thead className="bg-muted/50 border-b border-border">
-                                      <tr>
-                                        <th className="px-4 py-2 text-left font-medium text-foreground">Дата</th>
-                                        <th className="px-4 py-2 text-left font-medium text-foreground">Тип работы</th>
-                                        <th className="px-4 py-2 text-left font-medium text-foreground">Количество</th>
-                                        <th className="px-4 py-2 text-left font-medium text-foreground">Работник</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                      {order.workLogs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-muted/30">
-                                          <td className="px-4 py-2 text-foreground">
-                                            {new Date(log.createdAt).toLocaleString("ru-RU")}
-                                          </td>
-                                          <td className="px-4 py-2">
-                                            <Badge
-                                              className={
-                                                log.workType === "sewing"
-                                                  ? "bg-blue-100 text-blue-800"
-                                                  : log.workType === "cutting"
-                                                    ? "bg-orange-100 text-orange-800"
-                                                    : "bg-green-100 text-green-800"
-                                              }
-                                            >
-                                              {getWorkTypeText(log.workType)}
-                                            </Badge>
-                                          </td>
-                                          <td className="px-4 py-2 font-medium text-foreground">{log.quantity} шт.</td>
-                                          <td className="px-4 py-2 text-foreground">{log.workerName}</td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Номер заказа</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Продукт</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Требуется изделий</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Пошив</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Крой</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Пуговицы</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Статус</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {orders.map((order) => (
+                    <>
+                      <tr
+                        key={order.id}
+                        className="hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <span className="font-semibold text-foreground">{order.orderNumber}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">{order.productName}</td>
+                        <td className="px-6 py-4 text-right text-sm font-medium text-foreground">{order.quantity}</td>
+                        <td className="px-6 py-4 text-right text-sm font-medium text-blue-600">{order.totalSewing}</td>
+                        <td className="px-6 py-4 text-right text-sm font-medium text-orange-600">
+                          {order.totalCutting}
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm font-medium text-green-600">
+                          {order.totalButtons}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {expandedOrder === order.id ? (
+                            <ChevronUp className="w-5 h-5 inline" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 inline" />
+                          )}
                         </td>
                       </tr>
-                    )}
-                  </div>
-                ))}
+                      {expandedOrder === order.id && (
+                        <tr>
+                          <td colSpan={8} className="bg-slate-50">
+                            <div className="p-6 space-y-6">
+                              <div>
+                                <h4 className="font-semibold text-foreground mb-4">Основная информация</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Клиент</p>
+                                    <p className="font-medium text-foreground">{order.clientName}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">БИН клиента</p>
+                                    <p className="font-medium text-foreground">{order.clientBin}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Требуемых пуговок</p>
+                                    <p className="font-medium text-foreground">{order.quantityButtons}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Дата создания</p>
+                                    <p className="font-medium text-foreground">
+                                      {new Date(order.createdAt).toLocaleString("ru-RU")}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
 
-          </div>
+                              <div className="border-t pt-4">
+                                <h4 className="font-semibold text-foreground mb-4">Финансовая информация</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Цена крой (₸)</p>
+                                    <p className="text-xl font-bold text-orange-600">
+                                      {order.cuttingPrice.toLocaleString("ru-RU")}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Цена пошив (₸)</p>
+                                    <p className="text-xl font-bold text-blue-600">
+                                      {order.sewingPrice.toLocaleString("ru-RU")}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Общая стоимость (₸)</p>
+                                    <p className="text-xl font-bold text-green-600">
+                                      {order.totalCost.toLocaleString("ru-RU")}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Прогресс производства</p>
+                                    <p className="text-xl font-bold text-foreground">
+                                      {order.productionProgress.toFixed(1)}%
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {order.workLogs.length > 0 && (
+                                <div className="border-t pt-4">
+                                  <h4 className="font-semibold text-foreground mb-4">История работ</h4>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                      <thead className="bg-muted">
+                                        <tr>
+                                          <th className="px-4 py-2 text-left text-xs font-semibold text-foreground">
+                                            Дата
+                                          </th>
+                                          <th className="px-4 py-2 text-left text-xs font-semibold text-foreground">
+                                            Работник
+                                          </th>
+                                          <th className="px-4 py-2 text-left text-xs font-semibold text-foreground">
+                                            Тип работы
+                                          </th>
+                                          <th className="px-4 py-2 text-right text-xs font-semibold text-foreground">
+                                            Количество
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-border">
+                                        {order.workLogs.map((log, idx) => (
+                                          <tr key={idx} className="hover:bg-muted/50">
+                                            <td className="px-4 py-2 text-sm text-foreground">
+                                              {new Date(log.createdAt).toLocaleString("ru-RU")}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-foreground">{log.workerName}</td>
+                                            <td className="px-4 py-2 text-sm text-foreground">
+                                              {getWorkTypeText(log.workType)}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm font-medium text-foreground text-right">
+                                              {log.quantity}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         )}
       </main>
     </div>

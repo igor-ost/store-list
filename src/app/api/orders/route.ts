@@ -9,12 +9,40 @@ export async function POST(req: Request) {
 
     console.log("[v0] Creating order with data:", JSON.stringify(body, null, 2))
 
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, "0")
+    const mm = String(now.getMonth() + 1).padStart(2, "0")
+    const yy = String(now.getFullYear()).slice(-2)
+    const datePrefix = `${dd}${mm}${yy}`
+
+    // Ищем последний заказ за этот день
+    const lastOrder = await prisma.orders.findFirst({
+      where: {
+        order_number: {
+          startsWith: datePrefix,
+        },
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    })
+
+    let newIncrement = 1
+
+    if (lastOrder) {
+      const lastNumber = lastOrder.order_number.split("_")[1]
+      newIncrement = Number(lastNumber) + 1
+    }
+
+    const generatedOrderNumber = `${datePrefix}_${String(newIncrement).padStart(6, "0")}`
+
+
     // Create order with materials in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create the order
       const order = await tx.orders.create({
         data: {
-          order_number: general.order_number,
+          order_number: generatedOrderNumber,
           order_date: new Date(general.order_date),
           customer_id: general.customer_id,
           product_name: general.product_name,
