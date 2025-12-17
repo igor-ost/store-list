@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../prisma/prisma-client";
-
-
+import { type NextRequest, NextResponse } from "next/server"
+import { prisma } from "../../../../prisma/prisma-client"
+import { getMemoryStats, logMemory } from "../../../../lib/memory-logger"
 
 export async function POST(request: NextRequest) {
+  const memBefore = getMemoryStats()
+  logMemory("POST /api/customers - START")
+
   try {
     const body = await request.json()
 
@@ -13,28 +15,35 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(customer, { status: 201 })
   } catch (error) {
-
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return NextResponse.json({ error: "Заказчик с таким БИН уже существует" }, { status: 409 })
     }
 
     console.error("Error creating customer:", error)
     return NextResponse.json({ error: "Не удалось создать заказчика" }, { status: 500 })
+  } finally {
+    logMemory("POST /api/customers - END", memBefore)
   }
 }
+
 export async function GET() {
+  const memBefore = getMemoryStats()
+  logMemory("GET /api/customers - START")
+
   try {
     const customers = await prisma.customer.findMany({
       orderBy: {
         createdAt: "desc",
       },
-    });
+    })
 
-    return NextResponse.json(customers, { status: 200 });
+    return NextResponse.json(customers, { status: 200 })
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 });
+    return NextResponse.json({ error: "Неизвестная ошибка" }, { status: 500 })
+  } finally {
+    logMemory("GET /api/customers - END", memBefore)
   }
 }

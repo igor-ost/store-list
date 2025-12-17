@@ -171,7 +171,7 @@ export function WorkersList({ workers }: WorkersListProps) {
           <Card>
             <CardContent className="py-6 text-center">
               <p className="text-slate-500 text-sm">
-                {activeTab === "personnel" ? "Персонал" : "Работники"} не найдены
+                {activeTab === "personnel" ? "Персонал" : "Работники"} не н��йдены
               </p>
             </CardContent>
           </Card>

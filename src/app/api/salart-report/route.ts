@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "../../../../prisma/prisma-client"
+import { getMemoryStats, logMemory } from "../../../../lib/memory-logger"
 
 interface DetailedWorkLog {
   id: string
@@ -21,6 +22,9 @@ interface DetailedWorkLog {
 }
 
 export async function GET(request: NextRequest) {
+  const memBefore = getMemoryStats()
+  logMemory("GET /api/salart-report - START")
+
   try {
     const searchParams = request.nextUrl.searchParams
     const month = searchParams.get("month")
@@ -96,7 +100,7 @@ export async function GET(request: NextRequest) {
         productName: log.order.product_name,
         workerId: log.workerId,
         workerName: log.worker.name || "Unknown",
-        workType: log.workType as "sewing" | "cutting" | "buttons", // Include buttons in type
+        workType: log.workType as "sewing" | "cutting" | "buttons",
         quantity: log.quantity,
         pricePerUnit,
         totalPrice,
@@ -113,5 +117,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  } finally {
+    logMemory("GET /api/salart-report - END", memBefore)
   }
 }

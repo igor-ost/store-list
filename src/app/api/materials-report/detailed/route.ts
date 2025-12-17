@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "../../../../../prisma/prisma-client"
+import { getMemoryStats, logMemory } from "../../../../../lib/memory-logger"
+
 export interface MaterialsReport {
   orderNumber: string
   orderDate: string
@@ -59,6 +61,9 @@ export interface DetailedMaterialsReport {
 }
 
 export async function GET(request: NextRequest) {
+  const memBefore = getMemoryStats()
+  logMemory("GET /api/materials-report/detailed - START")
+
   try {
     const searchParams = request.nextUrl.searchParams
     const month = searchParams.get("month")
@@ -265,5 +270,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching detailed materials report:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  } finally {
+    logMemory("GET /api/materials-report/detailed - END", memBefore)
+
+    if (global.gc) {
+      global.gc()
+      console.log("[v0] Garbage collection triggered after materials report")
+    }
   }
 }
