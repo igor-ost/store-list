@@ -6,7 +6,7 @@ import { prisma } from "../../../../../prisma/prisma-client";
 
 export async function GET(request: Request) {
   try {
-
+    console.log("Memory at start:", process.memoryUsage().heapUsed / 1024 / 1024, "MB");
     const cookieStore = await cookies();
     let token = cookieStore.get("token")?.value;
 
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
     }
-
+    console.log("Memory after fetch:", process.memoryUsage().heapUsed / 1024 / 1024, "MB");
     return NextResponse.json({ 
       id: user.id,
       name: user.name,
